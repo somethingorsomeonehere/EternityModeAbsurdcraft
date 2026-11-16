@@ -34,23 +34,23 @@ import org.sporotofpoorety.eternitymode.util.ProjectileUtil;
 public class EntityMeteorBlock extends EntityThrownBlock
 {
 
-    float explosionPower;
-    boolean explosionFire;
-    boolean explosionDestruction;
+    public float explosionPower;
+    public boolean explosionFire;
+    public boolean explosionDestruction;
 
-    int splitProjectileCount; 
-    double splitConeRadians; 
-    int splitAimMode;
-    int splitLifetime;
-    float splitDamage; 
-    double splitSpeed; 
-    double splitAcceleration;
+    public int splitProjectileCount; 
+    public double splitConeRadians; 
+    public int splitAimMode;
+    public int splitLifetime;
+    public float splitDamage; 
+    public double splitSpeed; 
+    public double splitAcceleration;
 
-    boolean shouldSplit; 
-    boolean splitExplodes;
-    float splitExplosionPower;
-    boolean splitFire; 
-    boolean splitDestruction;
+    public boolean shouldSplit; 
+    public boolean splitExplodes;
+    public float splitExplosionPower;
+    public boolean splitFire; 
+    public boolean splitDestruction;
 
 
     public EntityMeteorBlock(World worldIn)
@@ -60,15 +60,15 @@ public class EntityMeteorBlock extends EntityThrownBlock
     }
 
     public EntityMeteorBlock(World worldIn, double x, double y, double z, 
-    EntityLivingBase owner, boolean dealsDamage, float thrownBlockDamage,
+    EntityLivingBase owner, boolean dealsDamage, float damageVal,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationVal, double gravitySpeed,
+    double accelerationRate, double gravitySpeed,
     float explosionPower, boolean explosionFire, boolean explosionDestruction,
     int splitProjectileCount, double splitConeRadians, int splitAimMode,
     int splitLifetime, float splitDamage, double splitSpeed, double splitAcceleration,
     boolean shouldSplit, boolean splitExplodes, float splitExplosionPower, boolean splitFire, boolean splitDestruction)
     {
-        super(worldIn, x, y, z, owner, WizardryBlocks.meteor.getDefaultState(), true, false, dealsDamage, thrownBlockDamage);
+        super(worldIn, x, y, z, owner, WizardryBlocks.meteor.getDefaultState(), true, false, dealsDamage, damageVal);
         this.setSize(7.84F, 7.84F);
         this.hasManualOrigin = true;
         this.dontBreakInitialPos = true;
@@ -76,7 +76,7 @@ public class EntityMeteorBlock extends EntityThrownBlock
         this.lifetimeMax = lifetimeMax;
 
         this.setMovement(speedX, speedY, speedZ, 
-            gravitySpeed, true, accelerationVal);
+            gravitySpeed, true, accelerationRate);
 
         this.explosionPower = explosionPower; 
         this.explosionFire = explosionFire; 
@@ -188,7 +188,7 @@ public class EntityMeteorBlock extends EntityThrownBlock
     public void meteorExplode()
     {
         ExplosionUtil.performOptimizedExplosion(this.world, this, this.owner, this.posX, this.posY + (this.height / 2.0D), this.posZ,
-            this.explosionPower, true, this.thrownBlockDamage, true, 3.0D, this.explosionDestruction, 9999999.0F, this.explosionFire, 
+            this.explosionPower, true, this.damageVal, true, 3.0D, this.explosionDestruction, 69420.0F, this.explosionFire, 
             true, 2, true);
 
 
@@ -229,7 +229,6 @@ public class EntityMeteorBlock extends EntityThrownBlock
                 vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed,
                 this.splitAcceleration, 0.0D,
                 0.6D, true, true, this.splitDamage,
-                2, 2, 0.06D,
                 20, this.splitExplodes, this.splitExplosionPower, this.splitFire, this.splitDestruction);
 
             this.world.spawnEntity(entitySplit);

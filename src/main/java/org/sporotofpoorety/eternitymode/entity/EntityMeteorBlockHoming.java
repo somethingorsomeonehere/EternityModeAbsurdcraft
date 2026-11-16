@@ -31,7 +31,7 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
     public boolean isPreHoming;
     public int timePreHoming;
     public int timePreHomingMax;
-    boolean isHoming;
+    public boolean isHoming;
     public int homingTime;
     public boolean homingTimeHasMax;
     public int homingTimeMax;
@@ -53,9 +53,9 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
     }
 
     public EntityMeteorBlockHoming(World worldIn, double x, double y, double z, 
-    EntityLivingBase owner, boolean dealsDamage, float thrownBlockDamage,
+    EntityLivingBase owner, boolean dealsDamage, float damageVal,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationVal, double gravitySpeed,
+    double accelerationRate, double gravitySpeed,
     float explosionPower, boolean explosionFire, boolean explosionDestruction,
     int splitProjectileCount, double splitConeRadians, int splitAimMode,
     int splitLifetime, float splitDamage, double splitSpeed, double splitAcceleration,
@@ -63,9 +63,9 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
     int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode,
     boolean homingSnapEnabled, boolean homingSnapVertical, double homingSnapThreshold, double homingSnapSteps)
     {
-        super(worldIn, x, y, z, owner, dealsDamage, thrownBlockDamage,
+        super(worldIn, x, y, z, owner, dealsDamage, damageVal,
         lifetimeMax, speedX, speedY, speedZ, 
-        accelerationVal, gravitySpeed,
+        accelerationRate, gravitySpeed,
         explosionPower, explosionFire, explosionDestruction,
         splitProjectileCount, splitConeRadians, splitAimMode,
         splitLifetime, splitDamage, splitSpeed, splitAcceleration,
@@ -237,9 +237,9 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
                 );
 
 //Simple homing
-                this.motionX = targetDistNormalized.x * this.homingSpeed;
-                this.motionY = targetDistNormalized.y * this.homingSpeed;
-                this.motionZ = targetDistNormalized.z * this.homingSpeed;
+                this.motionX = targetDistNormalized.x * this.homingSpeed * this.accelerationTracker;;
+                this.motionY = targetDistNormalized.y * this.homingSpeed * this.accelerationTracker;;
+                this.motionZ = targetDistNormalized.z * this.homingSpeed * this.accelerationTracker;;
             }
         }
 
@@ -302,6 +302,17 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
         if(this.homingTimeHasMax && (++this.homingTime > this.homingTimeMax))
         {
             this.projectilePostHoming();
+        }
+    }
+
+
+    public void accelerationApply()
+    {
+//If not relative homing
+        if(!(this.isHoming && this.homingMode == 1))
+        {
+//Just increase acceleration tracker
+            this.accelerationTracker *= this.accelerationRate;
         }
     }
 

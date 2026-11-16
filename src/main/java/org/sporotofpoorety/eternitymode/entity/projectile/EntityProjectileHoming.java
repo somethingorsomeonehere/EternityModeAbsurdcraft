@@ -2,27 +2,29 @@ package org.sporotofpoorety.eternitymode.entity.projectile;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
-import org.sporotofpoorety.eternitymode.entity.projectile.EntityFlameShotLinear;
 import org.sporotofpoorety.eternitymode.entity.projectile.EntityProjectileRaytrace;
+import org.sporotofpoorety.eternitymode.util.AimUtil;
 
 
 
-public class EntityProjectileHoming extends EntityProjectileRaytrace {
+public class EntityProjectileHoming extends EntityProjectileRaytrace 
+{
 
-    boolean isPreHoming;
-    int timePreHoming;
-    int timePreHomingMax;
-    boolean isHoming;
-    int homingTime;
-    boolean homingTimeHasMax;
-    int homingTimeMax;
-    double homingSpeed;
-    int homingMode;
-    boolean isPostHoming;
+    public boolean isPreHoming;
+    public int timePreHoming;
+    public int timePreHomingMax;
+    public boolean isHoming;
+    public int homingTime;
+    public boolean homingTimeHasMax;
+    public int homingTimeMax;
+    public double homingSpeed;
+    public int homingMode;
+    public boolean isPostHoming;
 
 
     public EntityProjectileHoming(World worldIn) 
@@ -34,18 +36,14 @@ public class EntityProjectileHoming extends EntityProjectileRaytrace {
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ,
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage,
-    int particleLifetime, int particleDensity, double particleVelocity,
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
     int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode) 
     {
         super(worldIn, x, y, z,
         owner, 
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,
-        particleLifetime, particleDensity, particleVelocity);
-
-        this.setSize(0.5F, 0.5F);
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
 
         this.isPreHoming = false;
         this.timePreHoming = 0;
@@ -65,89 +63,26 @@ public class EntityProjectileHoming extends EntityProjectileRaytrace {
     @Override
     public void onUpdate()
     {
-//Initial speed
-        this.speedApply();
-
-//Pre-homing
-        if(this.isPreHoming) { this.projectilePreHoming(); }
-        
-//Homing
-        if(this.isHoming) 
-        { 
-            if(this.homingMode == 0) { this.projectileHomingAbsolute(); }
-            if(this.homingMode == 1) { this.projectileHomingRelative(); }
-        }
-
-//Post-homing
-        if(this.isPostHoming) { this.projectilePostHoming(); }
-
-//Acceleration
-        this.accelerationApply();
-
         super.onUpdate();
-    }
 
 
-    @Override
-    public void speedApply()
-    {
-//If projectile not shot yet
-        if(!this.firstBeenShot)
+        if(!this.world.isRemote)
         {
-//Set been shot
-            this.firstBeenShot = true;
+            cacheTarget();
 
-
-//If it has a pre-homing phase, apply initial speed
-            if(this.timePreHomingMax > 0)
-            {
-//Then set to pre-homing
-                this.isPreHoming = true;
-//And apply an initial speed
-                this.motionX = this.speedX;
-                this.motionY = this.speedY;
-                this.motionZ = this.speedZ;
+//Pre-homing logic
+            if(this.isPreHoming) { this.projectilePreHoming(); }
+        
+//Homing logic
+            if(this.isHoming) 
+            { 
+                if(this.homingMode == 0) { this.projectileHomingAbsolute(); }
+                if(this.homingMode == 1) { this.projectileHomingRelative(); }
             }
 
-
-//If it has no homing phase
-            else
-            {
-//Set to be homing
-                this.isHoming = true;
-            }
+//Post-homing logic
+            if(this.isPostHoming) { this.projectilePostHoming(); }
         }
-    }
-
-
-    @Override
-    public void accelerationApply()
-    {
-        if(this.isPreHoming)
-        {
-            this.motionX *= this.accelerationRate;
-            this.motionY *= this.accelerationRate;
-            this.motionZ *= this.accelerationRate;
-        }
-        if(this.isHoming)
-        {
-            if(this.homingMode == 0)
-            {
-                this.motionX *= this.accelerationCurrent;
-                this.motionY *= this.accelerationCurrent;
-                this.motionZ *= this.accelerationCurrent;
-            }
-        }
-        if(this.isPostHoming)
-        {
-            this.motionX *= this.accelerationRate;
-            this.motionY *= this.accelerationRate;
-            this.motionZ *= this.accelerationRate;
-        }
-
-
-//Increase acceleration tracker
-        this.accelerationCurrent *= this.accelerationRate;
     }
 
 
@@ -171,28 +106,28 @@ public class EntityProjectileHoming extends EntityProjectileRaytrace {
 
     public void projectileHomingAbsolute()
     {
-        EntityLivingBase ownerTarget = this.getProjectileOwnerTarget();
+//If valid target
+        EntityLivingBase ownerTarget;
 
-
-//If owner is a living entity
-        if(this.owner != null && this.owner instanceof EntityLiving
-//With a target 
-        && ownerTarget != null)
+        if(owner instanceof EntityPlayer)
         {
-//Get distance vector (normalized)
-            Vec3d targetDistNormalized = new Vec3d
-            (
-                ownerTarget.posX - this.posX,
-                ownerTarget.posY - this.posY,
-                ownerTarget.posZ - this.posZ
-            );
-
-//Simple homing
-            this.motionX = targetDistNormalized.x * this.homingSpeed;
-            this.motionY = targetDistNormalized.y * this.homingSpeed;
-            this.motionZ = targetDistNormalized.z * this.homingSpeed;
+            ownerTarget = cachedTarget;
+        }
+        else
+        {
+            ownerTarget = this.getOwnerTarget();
         }
 
+        if(ownerTarget != null)
+        {
+//Get distance vector (normalized)
+            Vec3d targetDistNormalized = AimUtil.targetCenter(this, ownerTarget).normalize();
+
+//Simple homing
+            this.motionX = targetDistNormalized.x * this.homingSpeed * this.accelerationTracker;
+            this.motionY = targetDistNormalized.y * this.homingSpeed * this.accelerationTracker;
+            this.motionZ = targetDistNormalized.z * this.homingSpeed * this.accelerationTracker;
+        }
         
         if(this.homingTimeHasMax && (++this.homingTime >= this.homingTimeMax))
         {
@@ -203,23 +138,28 @@ public class EntityProjectileHoming extends EntityProjectileRaytrace {
 
     public void projectileHomingRelative()
     {
-        EntityLivingBase ownerTarget = this.getProjectileOwnerTarget();
+//If valid target
+        EntityLivingBase ownerTarget;
+
+        if(owner instanceof EntityPlayer)
+        {
+            ownerTarget = cachedTarget;
+        }
+        else
+        {
+            ownerTarget = this.getOwnerTarget();
+        }
 
 
-//If owner is a living entity
-        if(this.owner != null && this.owner instanceof EntityLiving
-//With a target 
-        && ownerTarget != null)
+        if(ownerTarget != null)
         {
 //Get distance
-            double targetDistX = ownerTarget.posX - this.posX;
-            double targetDistY = ownerTarget.posY - this.posY;
-            double targetDistZ = ownerTarget.posZ - this.posZ;
+            Vec3d targetDist = AimUtil.targetCenter(this, ownerTarget);
 
 //Accelerate based on how far target is
-            this.motionX += targetDistX * (0.01D * this.homingSpeed);
-            this.motionY += targetDistY * (0.01D * this.homingSpeed);
-            this.motionZ += targetDistZ * (0.01D * this.homingSpeed);
+            this.motionX += targetDist.x * (0.01D * this.homingSpeed);
+            this.motionY += targetDist.y * (0.01D * this.homingSpeed);
+            this.motionZ += targetDist.z * (0.01D * this.homingSpeed);
         }
 
         if(this.homingTimeHasMax && (++this.homingTime > this.homingTimeMax))
@@ -233,6 +173,39 @@ public class EntityProjectileHoming extends EntityProjectileRaytrace {
     {
         this.isHoming = false;
         this.isPostHoming = true;
+    }
+
+
+
+
+    public void initialSpeedCheck()
+    {
+        super.initialSpeedCheck();        
+
+
+//If it has a pre-homing phase
+        if(this.timePreHomingMax > 0)
+        {
+//Set to pre-homing
+            this.isPreHoming = true;
+        }
+//If it has no pre-homing phase
+        else
+        {
+//Set to be homing
+            this.isHoming = true;
+        }
+    }
+
+
+    public void accelerationApply()
+    {
+//If not relative homing
+        if(!(this.isHoming && this.homingMode == 1))
+        {
+//Just increase acceleration tracker
+            this.accelerationTracker *= this.accelerationRate;
+        }
     }
 
 

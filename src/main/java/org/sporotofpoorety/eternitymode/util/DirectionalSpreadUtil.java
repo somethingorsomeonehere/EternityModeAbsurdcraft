@@ -15,37 +15,35 @@ public final class DirectionalSpreadUtil
 
 //Make cone of vectors,
 //constructed using trigonometry
-    public static ArrayList<Vec3d> shootCone(Vec3d trigAdjacent, double coneAngle, int pointCount)
+    public static ArrayList<Vec3d> shootCone(Vec3d adjEnd, double coneAngle, int pointCount)
     {
         ArrayList<Vec3d> conePoints = new ArrayList<>(pointCount);
 
 
-//Orthonormal basis of the original forward direction
-        Vec3d[] forwardBasis = OrthonormalBasis.makeOrthonormalBasis(trigAdjacent);
-//Get its axes
+//Get forward dir and circle step rads
+        Vec3d[] forwardBasis = OrthonormalBasis.makeOrthonormalBasis(adjEnd);
         Vec3d orthoRight = forwardBasis[0];
         Vec3d orthoUp = forwardBasis[1];
         Vec3d orthoForward = forwardBasis[2];
 
-        
-//For each point in cone
-        double circumStep = (2.0D * Math.PI) / pointCount;
-        for(int pointAt = 0; pointAt < pointCount; pointAt++)
+        double coneStep = (2.0D * Math.PI) / pointCount;
+
+
+//Each point in circle as a triangle
+        for(int triangleAt = 0; triangleAt < pointCount; triangleAt++)
         {
-            double circumAt = circumStep * pointAt;
+//Get oppDir from angle
+            double oppEndAngle = triangleAt * coneStep;
+            Vec3d oppEndDir = orthoRight.scale(Math.cos(oppEndAngle)).add(orthoUp.scale(Math.sin(oppEndAngle)));
+//oppEnd = oppDir scaled by tan and adjLen
+            Vec3d oppEnd = oppEndDir.scale(Math.tan(coneAngle / 2.0D) * adjEnd.length()); 
 
-//Get the circular direction
-            Vec3d circumAtDir = orthoRight.scale(Math.cos(circumAt)).add(orthoUp.scale(Math.sin(circumAt)));
-//Scale circular direction 
-//by length of cone and tan of cone's angle
-            Vec3d trigOpposite = circumAtDir.scale(trigAdjacent.length()).scale(Math.tan(coneAngle / 2.0D)); 
 
-//Get hypothenuse of cone point,
-//using forward direction as cos and circular direction as sin
-            Vec3d conePointHypothenuse = trigAdjacent.add(trigOpposite);
+//Get hypothenuse end
+            Vec3d hypothEnd = adjEnd.add(oppEnd);
       
 //Add hypothenuse to cone points
-            conePoints.add(conePointHypothenuse);
+            conePoints.add(hypothEnd);
         }
 
 
@@ -64,6 +62,7 @@ public final class DirectionalSpreadUtil
 
 //Normalize original forward direction just in case
         Vec3d forwardNormalized = forwardOriginal.normalize();
+//Add original direction
         radialPopulation.add(forwardNormalized);
 
 

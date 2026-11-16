@@ -11,6 +11,21 @@ public final class AimUtil
 {
 
 
+    public static Vec3d targetCenter(Entity aimer, Entity target)
+    {
+        Vec3d centerToCenterVec = new Vec3d(target.posX - aimer.posX, 
+            (target.posY + (target.height / 2.0D)) - (aimer.posY + (aimer.height / 2.0D)), 
+            target.posZ - aimer.posZ);
+
+        return centerToCenterVec;
+    }
+
+    public static Vec3d targetDir(Entity aimer, Entity target)
+    {
+        return targetCenter(aimer, target).normalize();
+    }
+
+
 /*
 //How to get predictive aim?
 
@@ -68,10 +83,9 @@ Roots
             {
                 shouldPredictVertical = true;  
             }
-//If target is player
+//Or flying player
             if(target instanceof EntityPlayer)
             {
-//And player is flying
                 if( ((EntityPlayer) target).isElytraFlying() )
                 {
                     shouldPredictVertical = true;
@@ -81,8 +95,8 @@ Roots
 
 
 //Get target movement
-//      Vec3d targetMv = new Vec3d(target.posX - target.lastTickPosX, target.posY - target.lastTickPosY, target.posZ - target.lastTickPosZ);
-        Vec3d targetMv = new Vec3d(target.motionX, target.motionY, target.motionZ);
+        Vec3d targetMv = new Vec3d(target.posX - target.lastTickPosX, target.posY - target.lastTickPosY, target.posZ - target.lastTickPosZ);
+//      Vec3d targetMv = new Vec3d(target.motionX, target.motionY, target.motionZ);
 
 
         if(shouldPredictVertical) { return calcPredictiveAimVec(dist0, targetMv, projVel); }
@@ -201,6 +215,11 @@ Roots
         {
             return -1.0D;
         }
+    }
+
+    public static Vec3d randomDir()
+    {
+        return new Vec3d((Math.random() * 2.0) - 1.0, (Math.random() * 2.0) - 1.0, (Math.random() * 2.0) - 1.0).normalize();
     }
 
 }

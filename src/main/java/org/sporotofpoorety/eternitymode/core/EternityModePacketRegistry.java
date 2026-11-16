@@ -28,7 +28,15 @@ public class EternityModePacketRegistry
         (
             ExplosionVisualPacket.Handler.class,
             ExplosionVisualPacket.class,
-            0, 
+            packetId++, 
+            Side.CLIENT
+        );
+//Laser data
+        CHANNEL_INSTANCE.registerMessage
+        (
+            LaserDataPacket.Handler.class,
+            LaserDataPacket.class,
+            packetId++, 
             Side.CLIENT
         );
     }

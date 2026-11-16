@@ -40,7 +40,7 @@ public class EternityModeAfterimageEvents
 
 
 
-//Manage entity afterimages and latest positions
+//Manage entity last pos for afterimages
     @SubscribeEvent
     public void onEntityUpdate(LivingUpdateEvent event) 
     {
@@ -57,7 +57,7 @@ public class EternityModeAfterimageEvents
                 Vec3d currPos = entity.getPositionVector();
 
 
-//If no vector stored for entity
+//If no last pos stored for entity
                 if (!EACH_LATEST_VECTOR.containsKey(entity)) 
                 {
 //Store its current position
@@ -65,15 +65,17 @@ public class EternityModeAfterimageEvents
                 }
 
 
-//Get entity's stored vector
-                Vec3d storedVec = EACH_LATEST_VECTOR.get(entity);
-//If entity is now far enough from that vector
-                if (entity.getDistance(storedVec.x, storedVec.y, storedVec.z) > Math.max(2.5D, entity.width / 2.0D)) 
+
+
+//Get entity last pos and afterimage scale
+                Vec3d lastPos = EACH_LATEST_VECTOR.get(entity);
+                float scale = ((IMixinEntityLivingBase) entity).getAfterimageScale();
+//Update entity last pos,
+//And make afterimage if far enough from previous pos
+                if (entity.getDistance(lastPos.x, lastPos.y, lastPos.z) > Math.max(2.5D, entity.width * scale)) 
                 {
-//Replace it with current pos
                     EACH_LATEST_VECTOR.put(entity, currPos);
-//And make an afterimage at current pos        
-                    AFTER_IMAGES.add(new Afterimage(entity, currPos));
+                    AFTER_IMAGES.add(new Afterimage(entity, currPos, scale));
                 }
             }
         }
@@ -82,7 +84,7 @@ public class EternityModeAfterimageEvents
 
 
 
-//Actual afterimage render
+//Render each afterimage
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) 
     {
@@ -102,8 +104,9 @@ public class EternityModeAfterimageEvents
         GlStateManager.alphaFunc(516, 0.003921569f);
         GlStateManager.disableDepth();
         GlStateManager.enableBlend();
-//Blend function for afterimage
-        GlStateManager.blendFunc(GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA); 
+        GlStateManager.tryBlendFuncSeparate(
+            GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
+            GlStateManager.SourceFactor.ONE,       GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
         
 
 
@@ -126,7 +129,7 @@ public class EternityModeAfterimageEvents
         for (int i = AFTER_IMAGES.size() - 1; i >= 0; i--) 
         {
             Afterimage img = AFTER_IMAGES.get(i);
-            img.render(mc.getRenderManager());
+            img.renderLogic(mc.getRenderManager());
         }
 
 
@@ -144,22 +147,28 @@ public class EternityModeAfterimageEvents
 //Afterimage data structure
     public static class Afterimage 
     {
-
         public final WeakReference<EntityLivingBase> entityRef;
         public final Vec3d positionVec;
         public int lifeTime = 0;
         public final int maxLifeTime = 25;
+        public final float scale;
 
 
         public Afterimage(EntityLivingBase entity, Vec3d pos) 
         {
+            this(entity, pos, 1.0F);
+        }
+
+        public Afterimage(EntityLivingBase entity, Vec3d pos, float scale)
+        {
             this.entityRef = new WeakReference<>(entity);
             this.positionVec = pos;
+            this.scale = scale;
         }
 
 
-//Render the afterimage
-        public void render(RenderManager manager) 
+//Render an afterimage
+        public void renderLogic(RenderManager manager) 
         {
             EntityLivingBase entity = entityRef.get();
             if (entity == null) { return; }
@@ -169,20 +178,23 @@ public class EternityModeAfterimageEvents
             if (entity.isBurning()) { brightness = 15728880; }
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float)(brightness % 65536), (float)(brightness / 65536));
 
-//How much of the afterimage lifetime has passed
+
+//Afterimage expiration
             float expirePercent = (float) lifeTime / (float) maxLifeTime;
 //It will gradually become more transparent
             float alpha = 0.25F * (1F - expirePercent);
 
+//Set up GL State
             GlStateManager.pushMatrix();
             GlStateManager.translate(positionVec.x, positionVec.y, positionVec.z);
+            GlStateManager.scale(this.scale, this.scale, this.scale);
             GlStateManager.color(0.25F, 0.25F, 0.25F, alpha);
             
+            double imgOffX = (positionVec.x - entity.posX) / this.scale;
+            double imgOffY = (positionVec.y - entity.posY) / this.scale;
+            double imgOffZ = (positionVec.z - entity.posZ) / this.scale;
 //"false" partialTicks to prevent interpolation jitter
-            double dx = positionVec.x - entity.posX;
-            double dy = positionVec.y - entity.posY;
-            double dz = positionVec.z - entity.posZ;
-            manager.renderEntity(entity, dx, dy, dz, entity.rotationYaw, 0F, false); 
+            manager.renderEntity(entity, imgOffX, imgOffY, imgOffZ, entity.rotationYaw, 0F, false); 
             
             GlStateManager.popMatrix();
         }

@@ -14,65 +14,27 @@ public class EntityProjectileLinear extends EntityProjectileRaytrace {
     public EntityProjectileLinear(World worldIn) 
     {
         super(worldIn);
-
-        this.setSize(0.5F, 0.5F);
     }
 
     public EntityProjectileLinear(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity) 
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal)
     {
         super(worldIn, x, y, z,
         owner,
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity);
-
-        this.setSize(0.5F, 0.5F);
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
     }
 
 
 
 
-    @Override
     public void onUpdate()
     {
-        if(!this.firstBeenShot)
-        {
-            this.speedApply();
-
-            this.firstBeenShot = true;
-        }
-
-        this.accelerationApply();
-
         super.onUpdate();
-    }
-
-
-    @Override
-    public void speedApply()
-    {
-        motionX = this.speedX;
-        motionY = this.speedY;
-        motionZ = this.speedZ;
-    }
-
-
-    @Override
-    public void accelerationApply()
-    {
-        motionX *= this.accelerationRate;
-        motionY *= this.accelerationRate;
-        motionZ *= this.accelerationRate;
-
-
-//Increase acceleration tracker
-        this.accelerationCurrent *= this.accelerationRate;
     }
 
 

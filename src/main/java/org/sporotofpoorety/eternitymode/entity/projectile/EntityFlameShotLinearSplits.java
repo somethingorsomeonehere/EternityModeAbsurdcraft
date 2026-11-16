@@ -12,12 +12,14 @@ import net.minecraft.world.World;
 
 import org.sporotofpoorety.eternitymode.entity.projectile.EntityFlameShotLinear;
 
+import org.sporotofpoorety.eternitymode.util.ExplosionUtil;
 import org.sporotofpoorety.eternitymode.util.ProjectileUtil;
 
 
 
 
-public class EntityFlameShotLinearSplits extends EntityFlameShotLinear {
+public class EntityFlameShotLinearSplits extends EntityFlameShotLinear 
+{
 
 
     boolean splitExplodes; 
@@ -42,8 +44,7 @@ public class EntityFlameShotLinearSplits extends EntityFlameShotLinear {
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity,
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
     int splitProjectileCount, double splitConeRadians, int splitAimMode,
     int splitLifetime, float splitDamage, double splitSpeed, double splitAcceleration,
     int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction,
@@ -53,8 +54,7 @@ public class EntityFlameShotLinearSplits extends EntityFlameShotLinear {
         owner,
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity,
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
         fireDuration, shouldExplode, explosionPower, explosionFire, explosionDestruction);
 
         this.setSize(2.0F, 2.0F);
@@ -78,6 +78,14 @@ public class EntityFlameShotLinearSplits extends EntityFlameShotLinear {
 
     public void onTrueSetDead()
     {
+        if(this.shouldExplode)
+        {
+            ExplosionUtil.performOptimizedExplosion(this.world, this, this.owner, this.posX, this.posY + (0.5F / 5.0F), this.posZ,
+                this.explosionPower, true, this.damageVal, true, 3.0D, this.explosionDestruction, 69420.0F, this.explosionFire, 
+                true, 2, true);
+        }
+
+
         if(!this.world.isRemote)
         {
             ArrayList<Vec3d> spreadDirections = new ArrayList<>();
@@ -111,7 +119,6 @@ public class EntityFlameShotLinearSplits extends EntityFlameShotLinear {
                     vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed,
                     this.splitAcceleration, 0.0D,
                     0.6D, true, true, this.splitDamage,
-                    2, 2, 0.06D,
                     20, this.splitExplodes, this.splitExplosionPower, this.splitFire, this.splitDestruction);
 
                 this.world.spawnEntity(entitySplit);

@@ -3,13 +3,17 @@ package org.sporotofpoorety.eternitymode.core;
 
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import org.sporotofpoorety.eternitymode.Tags;
 import org.sporotofpoorety.eternitymode.config.EternityModeConfig;
+import org.sporotofpoorety.eternitymode.client.ShaderHandler;
 import org.sporotofpoorety.eternitymode.core.*;
 import org.sporotofpoorety.eternitymode.events.*;
 
@@ -47,6 +51,14 @@ public class EternityModeAbsurdcraft
         MinecraftForge.EVENT_BUS.register(new EternityModeEntityEvents());
         MinecraftForge.EVENT_BUS.register(new EternityModePlayerEvents());
         MinecraftForge.EVENT_BUS.register(new EternityModeAfterimageEvents());
+    }
+
+
+    @EventHandler
+    @SideOnly(Side.CLIENT)
+    public void onClientPreInit (FMLPreInitializationEvent event) {
+        
+        ShaderHandler.registerShaders();
     }
 
 }

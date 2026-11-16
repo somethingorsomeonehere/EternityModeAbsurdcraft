@@ -18,6 +18,8 @@ import org.sporotofpoorety.eternitymode.entity.*;
 import org.sporotofpoorety.eternitymode.entity.projectile.*;
 
 
+
+
 @Mod.EventBusSubscriber(modid = Tags.MOD_ID)
 public class EternityModeEntityRegistry 
 {
@@ -38,7 +40,7 @@ public class EternityModeEntityRegistry
                 .entity(entityClass)
                 .id(new ResourceLocation(Tags.MOD_ID, name), id)
                 .name(name)
-                .tracker(64, 1, true)
+                .tracker(200, 1, true)
                 .build()
         );
     }
@@ -84,7 +86,7 @@ public class EternityModeEntityRegistry
                 .id(new ResourceLocation(Tags.MOD_ID, name), id)
                 .name(name)
                 .egg(eggMainColor, eggSubColor)
-                .tracker(64, 1, true)
+                .tracker(200, 1, true)
                 .build()
         );
     }
@@ -135,5 +137,10 @@ public class EternityModeEntityRegistry
         //EntityRegistry.registerModEntity(new ResourceLocation(Tags.MOD_ID, "demon_scythe"), EntityDemonScythe.class, "demon_scythe", id++, EternityModeAbsurdcraft.INSTANCE, 128, 1, true);
         registerUnspawnable(event, EntityDemonScythe.class, "demon_scythe", id++);
         registerUnspawnable(event, EntityDarkShotLinear.class, "dark_shot_linear", id++);
+        registerUnspawnable(event, EntityDarkShotHoming.class, "dark_shot_homing", id++);
+        registerSpawnable(event, EntityWillowisp.class, "willowisp", id++, 0x88E788, 0x006400, 200, 1);
+        registerUnspawnable(event, EntityLightningCustom.class, "lightning_custom", id++, 320, 1);
+        registerUnspawnable(event, EntityGreenShotHoming.class, "green_shot_homing", id++);
+        registerUnspawnable(event, EntityDarkShotWavy.class, "dark_shot_wavy", id++);
     }
 }

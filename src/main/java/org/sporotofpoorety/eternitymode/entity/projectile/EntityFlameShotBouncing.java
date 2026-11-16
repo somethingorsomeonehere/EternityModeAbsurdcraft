@@ -8,6 +8,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 
 import org.sporotofpoorety.eternitymode.entity.projectile.EntityProjectileBouncing;
+import org.sporotofpoorety.eternitymode.util.ExplosionUtil;
 import org.sporotofpoorety.eternitymode.util.ParticleUtil;
 
 
@@ -26,7 +27,6 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
     {
         super(worldIn);
 
-        this.setSize(1.0F, 1.0F);
 
         this.fireDuration = 20;
         this.shouldExplode = false;
@@ -35,12 +35,12 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
         this.explosionDestruction = false;
     }
 
+
     public EntityFlameShotBouncing(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity,
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
     boolean acceleratesVertically, boolean bounceUpExtra, double bounceUpForce,
     int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction)
     {
@@ -48,39 +48,9 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
         owner,
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity,
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
         acceleratesVertically, bounceUpExtra, bounceUpForce);
 
-        this.setSize(1.0F, 1.0F);
-
-        this.fireDuration = fireDuration;
-        this.shouldExplode = shouldExplode;
-        this.explosionPower = explosionPower;
-        this.explosionFire = explosionFire;
-        this.explosionDestruction = explosionDestruction;
-    }
-
-    public EntityFlameShotBouncing(World worldIn, double x, double y, double z, 
-    EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity,
-    boolean projectileTransitionShould, int projectileTransitionLength,
-    boolean acceleratesVertically, boolean bounceUpExtra, double bounceUpForce,
-    int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction)
-    {
-        super(worldIn, x, y, z,
-        owner,
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity,
-        projectileTransitionShould, projectileTransitionLength,
-        acceleratesVertically, bounceUpExtra, bounceUpForce);
-
-        this.setSize(0.5F, 0.5F);
 
         this.fireDuration = fireDuration;
         this.shouldExplode = shouldExplode;
@@ -97,14 +67,13 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
     {
         super.onUpdate();
 
-
 		if(world.isRemote)
         {
-            ParticleUtil.particlesFireball(this, this.particleLifetime, this.particleDensity, this.particleVelocity);
+            ParticleUtil.particlesFireball(this, 10, 5, 0.06D);
 		}
+
+        transCheck();
     }
-
-
 
 
     @Override
@@ -125,6 +94,11 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
     }
 
 
+    public void transDo()
+    {
+        this.setNoGravity(false);
+        this.transTimer = -1;
+    }
 
 
     public void onHitEntity(RayTraceResult rayTraceResult, Entity entityHit)
@@ -139,7 +113,9 @@ public class EntityFlameShotBouncing extends EntityProjectileBouncing {
     {
         if(this.shouldExplode)
         {
-            this.world.newExplosion(this, this.posX, this.posY + (this.explosionPower / 5.0F), this.posZ, this.explosionPower, this.explosionFire, this.explosionDestruction);
+            ExplosionUtil.performOptimizedExplosion(this.world, this, this.owner, this.posX, this.posY + (0.5F / 5.0F), this.posZ,
+                this.explosionPower, true, this.damageVal, true, 3.0D, this.explosionDestruction, 69420.0F, this.explosionFire, 
+                true, 2, true);
         }
     }
 

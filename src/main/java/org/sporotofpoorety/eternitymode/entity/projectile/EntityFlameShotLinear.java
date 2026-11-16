@@ -7,11 +7,13 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
 import org.sporotofpoorety.eternitymode.entity.projectile.EntityProjectileLinear;
+import org.sporotofpoorety.eternitymode.util.ExplosionUtil;
 import org.sporotofpoorety.eternitymode.util.ParticleUtil;
 
 
 
-public class EntityFlameShotLinear extends EntityProjectileLinear {
+public class EntityFlameShotLinear extends EntityProjectileLinear 
+{
 
 
     int fireDuration;
@@ -30,18 +32,15 @@ public class EntityFlameShotLinear extends EntityProjectileLinear {
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity,
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
     int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction)
     {
         super(worldIn, x, y, z,
         owner,
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity);
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
 
-        this.setSize(1.0F, 1.0F);
 
         this.fireDuration = fireDuration;
         this.shouldExplode = shouldExplode;
@@ -58,10 +57,9 @@ public class EntityFlameShotLinear extends EntityProjectileLinear {
     {
         super.onUpdate();
 
-
 		if(world.isRemote)
         {
-            ParticleUtil.particlesFireball(this, this.particleLifetime, this.particleDensity, this.particleVelocity);
+            ParticleUtil.particlesFireball(this, 10, 5, 0.06D);
 		}
     }
 
@@ -82,7 +80,9 @@ public class EntityFlameShotLinear extends EntityProjectileLinear {
     {
         if(this.shouldExplode)
         {
-            this.world.newExplosion(this, this.posX, this.posY + (this.explosionPower / 5.0F), this.posZ, this.explosionPower, this.explosionFire, this.explosionDestruction);
+            ExplosionUtil.performOptimizedExplosion(this.world, this, this.owner, this.posX, this.posY + (0.5F / 5.0F), this.posZ,
+                this.explosionPower, true, this.damageVal, true, 3.0D, this.explosionDestruction, 69420.0F, this.explosionFire, 
+                true, 2, true);
         }
     }
 

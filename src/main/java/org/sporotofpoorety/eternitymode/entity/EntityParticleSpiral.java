@@ -20,11 +20,8 @@ import org.sporotofpoorety.eternitymode.entity.EntityWithOwner;
 public class EntityParticleSpiral extends EntityWithOwner 
 {
 
-    protected int timeToArm;
-
     protected boolean doesDamage;
     protected int damageInterval;
-    protected float damageAmount;
     protected double damageRadius;
     protected double damageHeight;
 
@@ -38,37 +35,23 @@ public class EntityParticleSpiral extends EntityWithOwner
     {
         super(world);
         setSize(0.5F, 0.5F);
-
-        this.lifetimeMax = 200;
-        this.timeToArm = 40;
-
-        this.doesDamage = true;
-        this.damageInterval = 5;
-        this.damageAmount = 10.0F;
-        this.damageRadius = 4.0D;
-        this.damageHeight = 8.0D;
-
-        this.particleLifetime = 20;
-        this.visualRadius = 4.0D;
-        this.riseSpeed = 0.4D;
-        this.textureIndex = 48;
     }
 
     public EntityParticleSpiral(World world, double x, double y, double z,
     EntityLivingBase owner, 
-    int lifetimeMax, int timeToArm,
-    boolean doesDamage, int damageInterval, float damageAmount, double damageRadius, double damageHeight, 
+    int lifetimeMax, int transTimer,
+    boolean doesDamage, int damageInterval, float damageVal, double damageRadius, double damageHeight, 
     int particleLifetime, double visualRadius, double riseSpeed, int textureIndex) 
     {
         super(world, x, y, z, owner);
         setSize(0.5F, 0.5F);
 
         this.lifetimeMax = lifetimeMax;
-        this.timeToArm = timeToArm;
+        this.transTimer = transTimer;
 
         this.doesDamage = doesDamage;
         this.damageInterval = damageInterval;
-        this.damageAmount = damageAmount;
+        this.damageVal = damageVal;
         this.damageRadius = damageRadius;
         this.damageHeight = damageHeight;
 
@@ -83,11 +66,8 @@ public class EntityParticleSpiral extends EntityWithOwner
     {
         super.writeEntityToNBT(compound);
 
-        compound.setInteger("TimeToArm", timeToArm);
-
         compound.setBoolean("DoesDamage", doesDamage);
         compound.setInteger("DamageInterval", damageInterval);
-        compound.setFloat("DamageAmount", damageAmount);
         compound.setDouble("DamageRadius", damageRadius);
         compound.setDouble("DamageHeight", damageHeight);
 
@@ -102,11 +82,8 @@ public class EntityParticleSpiral extends EntityWithOwner
     {
         super.readEntityFromNBT(compound);
 
-        if (compound.hasKey("TimeToArm")) { timeToArm = compound.getInteger("TimeToArm"); }
-
         if (compound.hasKey("DoesDamage")) { doesDamage = compound.getBoolean("DoesDamage"); }
         if (compound.hasKey("DamageInterval")) { damageInterval = compound.getInteger("DamageInterval"); }
-        if (compound.hasKey("DamageAmount")) { damageAmount = compound.getFloat("DamageAmount"); }
         if (compound.hasKey("DamageRadius")) { damageRadius = compound.getDouble("DamageRadius"); }
         if (compound.hasKey("DamageHeight")) { damageHeight = compound.getDouble("DamageHeight"); }
 
@@ -126,8 +103,9 @@ public class EntityParticleSpiral extends EntityWithOwner
     {
         super.onUpdate();
 
+        transCheck();
 
-        if(this.realTicksExisted <= timeToArm)
+        if(transTimer > 0)
         {
             this.preArmLogic();   
         }
@@ -193,7 +171,7 @@ public class EntityParticleSpiral extends EntityWithOwner
         
         for (EntityLivingBase mob : mobs) 
         {
-            attackEntityFrom(DamageSource.GENERIC, this.damageAmount);
+            attackEntityFrom(DamageSource.GENERIC, this.damageVal);
         }
     }
 

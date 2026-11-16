@@ -3,6 +3,7 @@ package org.sporotofpoorety.eternitymode.interfacemixins;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import net.minecraft.util.math.Vec3d;
 
 import org.sporotofpoorety.eternitymode.util.QueuedActionAtPos;
 
@@ -25,6 +26,7 @@ public interface IMixinEntityLiving
     public int getAbsurdcraftStunnedCooldown();
     public boolean getAbsurdcraftStunnedIsPostStop();
     public ConcurrentLinkedQueue<QueuedActionAtPos> getQueuedActions();
+    public Vec3d getTargetOffset();
 
 
     public void setRealTicksExisted(int realTicks);
@@ -44,4 +46,5 @@ public interface IMixinEntityLiving
     public void setAbsurdcraftStunnedIsPostStop(boolean isPostStop);
     public void setAbsurdcraftStunned(boolean isStunned, int time);
     public void addQueuedAction(QueuedActionAtPos queuedAction);
+    public void setTargetOffset(double targetX, double targetY, double targetZ);
 }

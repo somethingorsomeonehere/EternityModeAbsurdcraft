@@ -87,7 +87,7 @@ public class LaserRenderer
 //Get world time including partial ticks
         double worldTimeWithPartial = (double)worldTime + (double)partialTicks;
 //Scroll whole texture in a specific amount of time
-//Also the scrolling is negative to invert UV's top-bottom into bottom-top
+//Also the scrolling is inverted to hopefully make the texture seem to go start-end properly
         double textureScrolledHowMuchNeg = (-1.0D) * ((worldTimeWithPartial % timeToScrollOneTexturesWorth) / timeToScrollOneTexturesWorth);
 //Slowly rotates the inner cross-section
         double innerRotatedHowMuch = (2.0D * Math.PI) * ((worldTimeWithPartial % timeToRotateInner) / timeToRotateInner);
@@ -173,15 +173,15 @@ public class LaserRenderer
 
 //Opaque inner laser with additive blending and rotation
 
-//Appears behind opaque objects
+//Is opaque
         GlStateManager.depthMask(true);
 
-//Again using negative V scrolling to go bottom-top and not top-bottom
-        double innerBackTextureV = 1.0D + textureScrolledHowMuchNeg;
-        double innerFrontTextureV = innerBackTextureV - laserCoversHowMuchOfTexture;
-//Texture coverage for inner tips
-        double innerTipBottomTextureV = innerBackTextureV;
-        double innerTipTopTextureV = innerTipBottomTextureV - (laserCoversHowMuchOfTexture * (innerRadius * 2.0D / laserLen));
+//Again using inverted V scrolling to hopefully appear to go start-end this time
+        double innerBackTextureV = 0.0D + textureScrolledHowMuchNeg;
+        double innerFrontTextureV = innerBackTextureV + laserCoversHowMuchOfTexture;
+//Positive V scrolling for tip (So appears to go top-bottom)
+        double innerTipBottomTextureV = innerBackTextureV - textureScrolledHowMuchNeg;
+        double innerTipTopTextureV = innerTipBottomTextureV + (laserCoversHowMuchOfTexture * (innerRadius * 2.0D / laserLen));
 
 //Prepare buffer builder
         bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
@@ -242,15 +242,15 @@ public class LaserRenderer
             SourceFactor.SRC_ALPHA, DestFactor.ONE_MINUS_SRC_ALPHA,
             SourceFactor.ONE, DestFactor.ZERO
         );
-//Appears transparently over everything
+//Transparent
         GlStateManager.depthMask(false);
 
-//Again using negative V scrolling to go bottom-top and not top-bottom
-        double outerBackTextureV = 1.0D + textureScrolledHowMuchNeg;
-        double outerFrontTextureV = outerBackTextureV - laserCoversHowMuchOfTexture;
-//Texture coverage for outer tips
-        double outerTipBottomTextureV = outerBackTextureV;
-        double outerTipTopTextureV = outerTipBottomTextureV - (laserCoversHowMuchOfTexture * (outerRadius * 2.0D / laserLen));
+//Again using inverted V scrolling to hopefully appear to go start-end this time
+        double outerBackTextureV = 0.0D + textureScrolledHowMuchNeg;
+        double outerFrontTextureV = outerBackTextureV + laserCoversHowMuchOfTexture * ((laserLen + outerExtend) / laserLen);
+//Positive V scrolling for tip (So appears to go top-bottom)
+        double outerTipBottomTextureV = 0.0D - textureScrolledHowMuchNeg;
+        double outerTipTopTextureV = outerTipBottomTextureV + (laserCoversHowMuchOfTexture * (outerRadius * 2.0D / laserLen));
 
 //Prepare buffer builder
         bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);

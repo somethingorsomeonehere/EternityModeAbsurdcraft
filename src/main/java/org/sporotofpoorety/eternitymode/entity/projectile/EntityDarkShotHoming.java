@@ -1,0 +1,77 @@
+package org.sporotofpoorety.eternitymode.entity.projectile;
+
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.world.World;
+
+import electroblob.wizardry.util.ParticleBuilder;
+import electroblob.wizardry.util.ParticleBuilder.Type;
+
+
+public class EntityDarkShotHoming extends EntityProjectileHoming 
+{
+
+    public EntityDarkShotHoming(World worldIn) 
+    {
+        super(worldIn);
+
+        this.setSize(2.0F, 2.0F);
+    }
+
+    public EntityDarkShotHoming(World worldIn, double x, double y, double z, 
+    EntityLivingBase owner,
+    int lifetimeMax, double speedX, double speedY, double speedZ, 
+    double accelerationRate, double gravitySpeed, 
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
+    int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode)
+    {
+        super(worldIn, x, y, z,
+        owner, 
+        lifetimeMax, speedX, speedY, speedZ,
+        accelerationRate, gravitySpeed, 
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
+        timePreHomingMax, homingTimeHasMax, homingTimeMax, homingSpeed, homingMode);
+
+        this.setSize(2.0F, 2.0F);
+    }
+
+
+    @Override
+    public void onUpdate()
+    {
+        super.onUpdate();
+
+		if(world.isRemote)
+        {
+			float brightness = rand.nextFloat() * 0.2f;
+
+			ParticleBuilder.create(Type.SPARKLE, this).time(20 + rand.nextInt(10))
+			    .clr(brightness, 0.0f, brightness).spawn(world);
+			ParticleBuilder.create(Type.DARK_MAGIC, this).clr(0.1f, 0.0f, 0.0f).spawn(world);
+		}
+    }
+
+
+
+
+	@Override
+	public boolean canRenderOnFire()
+    {
+		return false;
+	}
+
+
+
+
+    protected void writeEntityToNBT(NBTTagCompound compound) 
+    {
+        super.writeEntityToNBT(compound);
+    }
+
+
+    protected void readEntityFromNBT(NBTTagCompound compound) 
+    {
+        super.readEntityFromNBT(compound);
+    }
+
+}

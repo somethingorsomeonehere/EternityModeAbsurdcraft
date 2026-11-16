@@ -83,5 +83,36 @@ public class EternityModeClientProxy extends EternityModeCommonProxy {
             EntityDarkShotLinear.class,
 		        manager -> new RenderProjectileBase(manager, 1.4f, new ResourceLocation(Wizardry.MODID, "textures/entity/darkness_orb.png"), true)
         );
+
+		RenderingRegistry.registerEntityRenderingHandler
+        (
+            EntityDarkShotHoming.class,
+		        manager -> new RenderProjectileBase(manager, 1.4f, new ResourceLocation(Wizardry.MODID, "textures/entity/darkness_orb.png"), true)
+        );
+
+		RenderingRegistry.registerEntityRenderingHandler
+        (
+            EntityWillowisp.class,
+		        manager -> new RenderWillowisp(manager)
+        );
+
+		RenderingRegistry.registerEntityRenderingHandler
+        (
+            EntityLightningCustom.class,
+		        manager -> new RenderLightningCustom(manager)
+        );
+
+		RenderingRegistry.registerEntityRenderingHandler
+        (
+            EntityGreenShotHoming.class,
+		        manager -> new RenderProjectileBase(manager, 1.4f, new ResourceLocation(Wizardry.MODID, "textures/entity/force_orb.png"), true)
+        );
+
+		RenderingRegistry.registerEntityRenderingHandler
+        (
+            EntityDarkShotWavy.class,
+		        manager -> new RenderProjectileBase(manager, 2.8f, new ResourceLocation(Wizardry.MODID, "textures/entity/darkness_orb.png"), true)
+        );
+
     }
 }

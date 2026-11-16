@@ -21,7 +21,6 @@ import org.sporotofpoorety.eternitymode.util.ProjectileUtil;
 public class EntityFlameShotHoming extends EntityProjectileHoming 
 {
 
-
     int fireDuration;
     boolean shouldExplode;  
     float explosionPower;
@@ -41,60 +40,13 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
         super(worldIn);
 
         this.setSize(2.0F, 2.0F);
-
-        this.fireDuration = 20;
-        this.shouldExplode = true;
-        this.explosionPower = 0.5F;
-        this.explosionFire = false;
-        this.explosionDestruction = false;
-
-        this.shouldSplit = false;
-
-        this.splitExplodes = true;
-        this.splitExplosionPower = 0.5F;
-        this.splitFire = false;
-        this.splitDestruction = false;
     }
 
     public EntityFlameShotHoming(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage,
-    int particleLifetime, int particleDensity, double particleVelocity,
-    int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode, 
-    int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction)
-    {
-        super(worldIn, x, y, z,
-        owner,
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,
-        particleLifetime, particleDensity, particleVelocity,
-        timePreHomingMax, homingTimeHasMax, homingTimeMax, homingSpeed, homingMode);
-
-        this.setSize(0.5F, 0.5F);
-
-        this.fireDuration = fireDuration;
-        this.shouldExplode = shouldExplode;
-        this.explosionPower = explosionPower;
-        this.explosionFire = explosionFire;
-        this.explosionDestruction = explosionDestruction;
-
-        this.shouldSplit = false;
-
-        this.splitExplodes = true;
-        this.splitExplosionPower = 0.5F;
-        this.splitFire = false;
-        this.splitDestruction = false;
-    }
-
-    public EntityFlameShotHoming(World worldIn, double x, double y, double z, 
-    EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage,
-    int particleLifetime, int particleDensity, double particleVelocity,
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
     int splitProjectileCount, double splitConeRadians, int splitAimMode,
     int splitLifetime, float splitDamage, double splitSpeed, double splitAcceleration,
     int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode, 
@@ -105,19 +57,11 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
         owner, 
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,
-        particleLifetime, particleDensity, particleVelocity,
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
         timePreHomingMax, homingTimeHasMax, homingTimeMax, homingSpeed, homingMode);
 
-        this.setSize(0.5F, 0.5F);
+        this.setSize(2.0F, 2.0F);
 
-        this.splitProjectileCount = splitProjectileCount; 
-        this.splitConeRadians = splitConeRadians; 
-        this.splitAimMode = splitAimMode;
-        this.splitLifetime = splitLifetime;
-        this.splitDamage = splitDamage; 
-        this.splitSpeed = splitSpeed; 
-        this.splitAcceleration = splitAcceleration;
 
         this.fireDuration = fireDuration;
         this.shouldExplode = shouldExplode;
@@ -131,6 +75,15 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
         this.splitExplosionPower = splitExplosionPower;
         this.splitFire = splitFire;
         this.splitDestruction = splitDestruction;
+
+
+        this.splitProjectileCount = splitProjectileCount; 
+        this.splitConeRadians = splitConeRadians; 
+        this.splitAimMode = splitAimMode;
+        this.splitLifetime = splitLifetime;
+        this.splitDamage = splitDamage; 
+        this.splitSpeed = splitSpeed; 
+        this.splitAcceleration = splitAcceleration;
     }
 
 
@@ -144,7 +97,7 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
 
 		if(world.isRemote)
         {
-            ParticleUtil.particlesFireball(this, this.particleLifetime, this.particleDensity, this.particleVelocity);
+            ParticleUtil.particlesFireball(this, 20, 10, 0.12D);
 		}
     }
 
@@ -166,7 +119,7 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
         if(this.shouldExplode)
         {
             ExplosionUtil.performOptimizedExplosion(this.world, this, this.owner, this.posX, this.posY + (0.5F / 5.0F), this.posZ,
-                this.explosionPower, true, this.projectileHitDamage, true, 3.0D, this.explosionDestruction, 9999999.0F, this.explosionFire, 
+                this.explosionPower, true, this.damageVal, true, 3.0D, this.explosionDestruction, 69420.0F, this.explosionFire, 
                 true, 2, true);
         }
     }
@@ -207,7 +160,6 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
                 vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed,
                 this.splitAcceleration, 0.0D,
                 0.6D, true, true, this.splitDamage,
-                2, 2, 0.06D,
                 20, this.splitExplodes, this.splitExplosionPower, this.splitFire, this.splitDestruction);
 
             this.world.spawnEntity(entitySplit);

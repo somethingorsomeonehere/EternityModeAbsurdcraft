@@ -5,6 +5,9 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
 
+import electroblob.wizardry.util.ParticleBuilder;
+import electroblob.wizardry.util.ParticleBuilder.Type;
+
 import org.sporotofpoorety.eternitymode.entity.projectile.EntityProjectileLinear;
 
 
@@ -16,25 +19,19 @@ public class EntityDarkShotLinear extends EntityProjectileLinear
     public EntityDarkShotLinear(World worldIn) 
     {
         super(worldIn);
-
-        this.setSize(1.0F, 1.0F);
     }
 
     public EntityDarkShotLinear(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ, 
     double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage, 
-    int particleLifetime, int particleDensity, double particleVelocity)
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal)
     {
         super(worldIn, x, y, z,
         owner,
         lifetimeMax, speedX, speedY, speedZ,
         accelerationRate, gravitySpeed, 
-        hitCheckSize, projectileStopsAtEntity, projectileStopsAtBlock, projectileHitDamage,  
-        particleLifetime, particleDensity, particleVelocity);
-
-        this.setSize(1.0F, 1.0F);
+        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
     }
 
 
@@ -44,6 +41,15 @@ public class EntityDarkShotLinear extends EntityProjectileLinear
     public void onUpdate()
     {
         super.onUpdate();
+
+		if(world.isRemote)
+        {
+			float brightness = rand.nextFloat() * 0.2f;
+
+			ParticleBuilder.create(Type.SPARKLE, this).time(20 + rand.nextInt(10))
+			    .clr(brightness, 0.0f, brightness).spawn(world);
+			ParticleBuilder.create(Type.DARK_MAGIC, this).clr(0.1f, 0.0f, 0.0f).spawn(world);
+		}
     }
 
 

@@ -1,6 +1,7 @@
 {
     "entity.blastercharging":
     {
+		"subtitle": "subtitles.eternitymode.entity.blastercharging",
         "category": "hostile",
         "sounds":
         [
@@ -9,6 +10,7 @@
     },
     "entity.blastersound":
     {
+		"subtitle": "subtitles.eternitymode.entity.blastersound",
         "category": "hostile",
         "sounds":
         [
@@ -17,6 +19,7 @@
     },
     "entity.dizzy":
     {
+		"subtitle": "subtitles.eternitymode.entity.dizzy",
         "category": "hostile",
         "sounds":
         [
@@ -25,6 +28,7 @@
     },
     "entity.dizzyboss":
     {
+		"subtitle": "subtitles.eternitymode.entity.dizzyboss",
         "category": "hostile",
         "sounds":
         [
@@ -33,6 +37,7 @@
     },
     "entity.gaussnuke":
     {
+		"subtitle": "subtitles.eternitymode.entity.gaussnuke",
         "category": "hostile",
         "sounds":
         [
@@ -41,6 +46,7 @@
     },
     "entity.scythedemon":
     {
+		"subtitle": "subtitles.eternitymode.entity.scythedemon",
         "category": "neutral",
         "sounds":
         [
@@ -53,10 +59,12 @@
         "sounds":
         [
             "eternitymode:entity/scytheswing"
-        ]
+        ],
+		"subtitle": "subtitles.eternitymode.entity.scytheswing"
     },
     "entity.slamexplosion":
     {
+		"subtitle": "subtitles.eternitymode.entity.slamexplosion",
         "category": "hostile",
         "sounds":
         [
@@ -65,6 +73,7 @@
     },
     "entity.starwindup":
     {
+		"subtitle": "subtitles.eternitymode.entity.starwindup",
         "category": "hostile",
         "sounds":
         [
@@ -73,6 +82,7 @@
     },
     "entity.tacticalnuke":
     {
+		"subtitle": "subtitles.eternitymode.entity.tacticalnuke",
         "category": "hostile",
         "sounds":
         [

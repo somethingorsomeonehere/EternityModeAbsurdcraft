@@ -140,7 +140,7 @@ public final class ExplosionUtil
 
             if(hasParticles)
             {
-                PacketUtil.sendPacketToNearbyPlayers(worldIn, atX, atY, atZ, 999.0D, 
+                PacketUtil.sendPacketToNearbyPlayers(worldIn, atX, atY, atZ, 320.0D, 
                     new ExplosionVisualPacket(particleType, atX, atY, atZ, (float) radius, breakBlocks));
             }
 

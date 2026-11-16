@@ -1,9 +1,12 @@
 package org.sporotofpoorety.eternitymode.entity.projectile;
 
+
+import java.util.List;
+import java.util.UUID;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
@@ -14,11 +17,8 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.UUID;
-
 import org.sporotofpoorety.eternitymode.entity.EntityWithOwner;
+import org.sporotofpoorety.eternitymode.util.DamageUtil;
 
 
 
@@ -31,33 +31,19 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     public double speedX;
     public double speedY;
     public double speedZ;
-    public double accelerationRate;
-    public double accelerationCurrent;
-    public double gravitySpeed;
 
     public double hitCheckSize;
-    public boolean projectileStopsAtEntity;
-    public boolean projectileStopsAtBlock;
-    public float projectileHitDamage;
-
-    int particleLifetime;
-    int particleDensity;
-    double particleVelocity;
-
+    public boolean collidesEntities;
+    public boolean collidesBlocks;
 
 //Niche
-    boolean projectileTransitionShould = false;
-    int projectileTransitionTimer = 0;
-    int projectileTransitionLength = 20;
-    boolean projectileTransitioned = false;
-
-    int splitProjectileCount = 50; 
-    double splitConeRadians = Math.PI;
-    int splitAimMode = 0;
-    int splitLifetime = 100; 
-    float splitDamage = 1.0F; 
-    double splitSpeed = 1.0D;
-    double splitAcceleration = 1.01D;
+    public int splitProjectileCount = 50; 
+    public double splitConeRadians = Math.PI;
+    public int splitAimMode = 0;
+    public int splitLifetime = 100; 
+    public float splitDamage = 1.0F; 
+    public double splitSpeed = 1.0D;
+    public double splitAcceleration = 1.01D;
 
 
 
@@ -65,18 +51,13 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     public EntityProjectileRaytrace(World worldIn)
     {
         super(worldIn);
-
-        this.particleLifetime = 10;
-        this.particleDensity = 5;
-        this.particleVelocity = 0.06D;
     }
 
     public EntityProjectileRaytrace(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
     int lifetimeMax, double speedX, double speedY, double speedZ,
     double accelerationRate, double gravitySpeed,
-    double hitCheckSize, boolean projectileStopsAtEntity, boolean projectileStopsAtBlock, float projectileHitDamage,
-    int particleLifetime, int particleDensity, double particleVelocity)
+    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal)
     {
         super(worldIn, x, y, z, owner);
 
@@ -89,17 +70,13 @@ public class EntityProjectileRaytrace extends EntityWithOwner
         this.speedY = speedY;
         this.speedZ = speedZ;
         this.accelerationRate = accelerationRate;
-        this.accelerationCurrent = accelerationRate;
+        this.accelerationTracker = accelerationRate;
         this.gravitySpeed = gravitySpeed;
 
         this.hitCheckSize = hitCheckSize;
-        this.projectileStopsAtEntity = projectileStopsAtEntity;
-        this.projectileStopsAtBlock = projectileStopsAtBlock;
-        this.projectileHitDamage = projectileHitDamage;
-
-        this.particleLifetime = particleLifetime;
-        this.particleDensity = particleDensity;
-        this.particleVelocity = particleVelocity;
+        this.collidesEntities = collidesEntities;
+        this.collidesBlocks = collidesBlocks;
+        this.damageVal = damageVal;
     }
 
 
@@ -109,53 +86,148 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     }
 
 
+    @Override
+    protected void writeEntityToNBT(NBTTagCompound compound)
+    {
+        super.writeEntityToNBT(compound);
+
+
+        compound.setBoolean("FirstBeenShot", this.firstBeenShot);
+
+        compound.setDouble("SpeedX", this.speedX);
+        compound.setDouble("SpeedY", this.speedY);
+        compound.setDouble("SpeedZ", this.speedZ);
+
+        compound.setDouble("HitCheckSize", this.hitCheckSize);
+        compound.setBoolean("CollidesEntities", this.collidesEntities);
+        compound.setBoolean("CollidesBlocks", this.collidesBlocks);
+
+//Niche
+        compound.setInteger("SplitProjectileCount", this.splitProjectileCount);
+        compound.setDouble("SplitConeRadians", this.splitConeRadians);
+        compound.setInteger("SplitAimMode", this.splitAimMode);
+        compound.setInteger("SplitLifetime", this.splitLifetime);
+        compound.setFloat("SplitDamage", this.splitDamage);
+        compound.setDouble("SplitSpeed", this.splitSpeed);
+        compound.setDouble("SplitAcceleration", this.splitAcceleration);
+    }
+
+
+    @Override
+    protected void readEntityFromNBT(NBTTagCompound compound)
+    {
+        super.readEntityFromNBT(compound);
+
+
+        if (compound.hasKey("FirstBeenShot")) { this.firstBeenShot = compound.getBoolean("FirstBeenShot"); }
+
+        if (compound.hasKey("SpeedX")) { this.speedX = compound.getDouble("SpeedX"); }
+        if (compound.hasKey("SpeedY")) { this.speedY = compound.getDouble("SpeedY"); }
+        if (compound.hasKey("SpeedZ")) { this.speedZ = compound.getDouble("SpeedZ"); }
+
+        if (compound.hasKey("HitCheckSize")) { this.hitCheckSize = compound.getDouble("HitCheckSize"); }
+        if (compound.hasKey("CollidesEntities")) { this.collidesEntities = compound.getBoolean("CollidesEntities"); }
+        if (compound.hasKey("CollidesBlocks")) { this.collidesBlocks = compound.getBoolean("CollidesBlocks"); }
+
+//Niche
+        if (compound.hasKey("SplitProjectileCount")) { this.splitProjectileCount = compound.getInteger("SplitProjectileCount"); }
+        if (compound.hasKey("SplitConeRadians")) { this.splitConeRadians = compound.getDouble("SplitConeRadians"); } 
+        if (compound.hasKey("SplitAimMode")) { this.splitAimMode = compound.getInteger("SplitAimMode"); }
+        if (compound.hasKey("SplitLifetime")) { this.splitLifetime = compound.getInteger("SplitLifetime"); }
+        if (compound.hasKey("SplitDamage")) { this.splitDamage = compound.getFloat("SplitDamage"); }
+        if (compound.hasKey("SplitSpeed")) { this.splitSpeed = compound.getDouble("SplitSpeed"); } 
+        if (compound.hasKey("SplitAcceleration")) { this.splitAcceleration = compound.getDouble("SplitAcceleration"); } 
+    }
+
+
 
 
     public void onUpdate()
     {
+//EntityWithOwner update
         super.onUpdate();
 
 
-/*
-//Yes, this has to be set manually
-        this.lastTickPosX = this.posX;
-        this.lastTickPosY = this.posY;
-        this.lastTickPosZ = this.posZ;
-*/
+//Apply initial speed
+        this.initialSpeedCheck();
+
+//Check for collision
+        RayTraceResult collisionResult = this.collideTotal();
+
+//Make collision decision
+        this.decideCollision(collisionResult);
+
+//Set and clamp rotation
+        this.setProjectileRotation();
+        this.clampProjectileRotation();
+
+//Projectile movement logic
+        this.performBasicMovement();
+    }
 
 
+//Check for initial speed apply
+    public void initialSpeedCheck()
+    {
+        if(!this.firstBeenShot)
+        {
+            this.motionX = this.speedX;
+            this.motionY = this.speedY;
+            this.motionZ = this.speedZ;
 
-//Start and end vectors for this tick's movement
+            this.firstBeenShot = true;
+        }
+    }
+
+
+//Check and return collision   
+    protected RayTraceResult collideTotal()
+    {
         Vec3d vecStart = new Vec3d(this.posX, this.posY, this.posZ);
         Vec3d vecEnd = new Vec3d(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
 
-//Check for block collision
-        RayTraceResult collisionResult = this.world.rayTraceBlocks(vecStart, vecEnd,
-//stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock
-        false, true, false);
+//Check blocks and entities
+        RayTraceResult collisionResult = this.collideBlocks(vecStart, vecEnd);
+        collisionResult = this.collideEntities(collisionResult, vecStart, vecEnd);
 
-//If this collides with blocks
-        if (this.projectileStopsAtBlock
-//and it actually did collide with a block
-        && collisionResult != null)
+        return collisionResult;
+    }
+
+
+//Check collision (blocks)
+    public RayTraceResult collideBlocks(Vec3d vecStart, Vec3d vecEnd)
+    {
+        if(!this.noClip)
         {
-//Truncate vecEnd to not reach behind collided block
-            vecEnd = new Vec3d(collisionResult.hitVec.x, collisionResult.hitVec.y, collisionResult.hitVec.z);
+            RayTraceResult blockCollision = this.world.rayTraceBlocks(vecStart, vecEnd,
+//stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock
+            false, true, false);
+
+//If this collided, truncate vecEnd
+            if (blockCollision != null)
+            {
+                vecEnd = new Vec3d(blockCollision.hitVec.x, blockCollision.hitVec.y, blockCollision.hitVec.z);
+            }
+
+            return blockCollision;
         }
+        else
+        {
+            return null;
+        }
+    }
 
-
-
-
+//Check collision (entities)
+    public RayTraceResult collideEntities(RayTraceResult collisionResult, Vec3d vecStart, Vec3d vecEnd)
+    {
 //Closest hit entity null by default
         Entity closestHitEntity = null;
 
 //Entities within BB + motion + 1 block of lenience
-        List<Entity> entitiesNearby = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox().expand(this.motionX, this.motionY, this.motionZ).grow(this.hitCheckSize + 0.7D));
+        List<Entity> entitiesNearby = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox().expand(this.motionX, this.motionY, this.motionZ).grow(this.hitCheckSize + 0.5D));
 
 //Closest hit entity distance squared
         double closestHitDistanceSq = 0.0D;
-
-
 
 
 //For each nearby entity
@@ -166,7 +238,6 @@ public class EntityProjectileRaytrace extends EntityWithOwner
             {
                 continue;    
             }
-
 
 //Get and grow entity bounding box (hitcheck)
                 AxisAlignedBB entityBB = candidateEntity.getEntityBoundingBox().grow(this.hitCheckSize);
@@ -193,9 +264,6 @@ public class EntityProjectileRaytrace extends EntityWithOwner
             }                  
         }
 
-
-
-
 //If an entity got hit at all
         if (closestHitEntity != null)
         {
@@ -203,133 +271,8 @@ public class EntityProjectileRaytrace extends EntityWithOwner
             collisionResult = new RayTraceResult(closestHitEntity);
         }
 
-
-//If anything got hit at all
-        if (collisionResult != null)
-        {
-//Goes through portals
-            if (collisionResult.typeOfHit == RayTraceResult.Type.BLOCK && this.world.getBlockState(collisionResult.getBlockPos()).getBlock() == Blocks.PORTAL)
-            {
-                this.setPortal(collisionResult.getBlockPos());
-            }
-//Otherwise performs collision
-            else if (!net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, collisionResult))
-            {
-                this.onHit(collisionResult);
-            }
-        }
-
-
-
-
-//Have to specify motion myself yes
-        this.posX += this.motionX;
-        this.posY += this.motionY;
-        this.posZ += this.motionZ;
-
-
-
-
-//Get horizontal speed
-        float horizontalSpeed = MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
-
-
-//Get horizontal rotation
-        this.rotationYaw = (float) (MathHelper.atan2(this.motionX, this.motionZ) * 360D / (2 * Math.PI));
-//Set vertical rotation
-        this.rotationPitch = (float) (MathHelper.atan2(this.motionY, (double) horizontalSpeed) * 360D / (2 * Math.PI));
-
-
-//If previous vertical rotation above positive bound
-        while (this.rotationPitch - this.prevRotationPitch < -180.0F)
-        {
-//Adjust it negatively
-            this.prevRotationPitch -= 360.0F;
-        }
-
-//If previous vertical rotation below negative bound
-        while (this.rotationPitch - this.prevRotationPitch >= 180.0F)
-        {
-//Adjust it positively
-            this.prevRotationPitch += 360.0F;
-        }
-
-//If previous horizontal rotation above positive bound
-        while (this.rotationYaw - this.prevRotationYaw < -180.0F)
-        {
-//Adjust it negatively
-            this.prevRotationYaw -= 360.0F;
-        }
-
-//If previous horizontal rotation below negative bound
-        while (this.rotationYaw - this.prevRotationYaw >= 180.0F)
-        {
-//Adjust it positively
-            this.prevRotationYaw += 360.0F;
-        }
-
-
-//Rotation smoothing
-        this.rotationPitch = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * 0.2F;
-        this.rotationYaw = this.prevRotationYaw + (this.rotationYaw - this.prevRotationYaw) * 0.2F;
-
-
-
-
-//Gravity
-        if (!this.hasNoGravity())
-        {
-            this.motionY -= this.gravitySpeed;
-        }
-
-
-
-
-//Setting position is the last thing
-        this.setPosition(this.posX, this.posY, this.posZ);
+        return collisionResult;
     }
-
-    @Override
-    public void onLifetimeExpire()
-    {
-        this.onTrueSetDead();
-        this.setDead();
-    }
-
-
-
-
-    public void speedApply()
-    {
-
-    }
-
-
-    public void accelerationApply()
-    {
-
-    }
-
-
-    @SideOnly(Side.CLIENT)
-    public void setVelocity(double x, double y, double z)
-    {
-        this.motionX = x;
-        this.motionY = y;
-        this.motionZ = z;
-
-        if (this.prevRotationPitch == 0.0F && this.prevRotationYaw == 0.0F)
-        {
-            float f = MathHelper.sqrt(x * x + z * z);
-            this.rotationPitch = (float)(MathHelper.atan2(y, f) * (180D / Math.PI));
-            this.rotationYaw = (float)(MathHelper.atan2(x, z) * (180D / Math.PI));
-            this.prevRotationPitch = this.rotationPitch;
-            this.prevRotationYaw = this.rotationYaw;
-            this.setLocationAndAngles(this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
-        }
-    }
-
-
 
 
     public boolean projectileHitEntityConditions(Entity entityToCheck)
@@ -354,39 +297,22 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     }
 
 
-//Already preemptively null-checked to enable
-//projectile-specific logic to safely run before this setDead()
-    public void onHitEntity(RayTraceResult rayTraceResult, Entity entityHit)
+//Decide what collision to do
+    protected void decideCollision(RayTraceResult collisionResult)
     {
-//If owner is not null
-        if (this.owner != null
-//And projectile has actual damage
-        && this.projectileHitDamage > 0.1F)
+//If anything got hit at all
+        if (collisionResult != null)
         {
-//Attack entity
-            entityHit.attackEntityFrom(DamageSource.causeIndirectDamage(this, this.owner).setProjectile(), this.projectileHitDamage);
-        }
-
-//Can set whether projectile stops at entities
-        if(!world.isRemote && this.projectileStopsAtEntity)
-        {
-            this.onTrueSetDead();
-            this.setDead();
-            return;
-        }
-    }
-
-
-//Block hit logic
-    public void onHitBlock(RayTraceResult rayTraceResult, Block blockHit)
-    {
-//Can set whether projectile stops at blocks
-        if(!world.isRemote && this.projectileStopsAtBlock)
-        {
-            this.motionX = this.motionY = this.motionZ = 0.0D;
-            this.onTrueSetDead();
-            this.setDead();
-            return;
+//Ignore portals
+            if (collisionResult.typeOfHit == RayTraceResult.Type.BLOCK && this.world.getBlockState(collisionResult.getBlockPos()).getBlock() == Blocks.PORTAL)
+            {
+//              this.setPortal(collisionResult.getBlockPos());
+            }
+//Otherwise performs collision
+            else if (!net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, collisionResult))
+            {
+                this.onHit(collisionResult);
+            }
         }
     }
 
@@ -418,108 +344,142 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     }
 
 
-    public void onTrueSetDead()
+//Already preemptively null-checked to enable
+//projectile-specific logic to safely run before this setDead()
+    public void onHitEntity(RayTraceResult rayTraceResult, Entity entityHit)
     {
+        if(!world.isRemote)
+        {
+            boolean ownerHostile = DamageUtil.isHostile(owner);
+            boolean targetHostile = DamageUtil.isHostile(entityHit);
 
+//If owner is not null
+            if (this.owner != null && (ownerHostile != targetHostile) && this.damageVal > 0.1F)
+            {
+//Attack entity
+                entityHit.attackEntityFrom(DamageSource.causeIndirectDamage(this, this.owner).setProjectile(), this.damageVal);
+            }
+
+//Can set whether projectile stops at entities
+            if(this.collidesEntities)
+            {
+                this.onTrueSetDead();
+                this.setDead();
+                return;
+            }
+        }
+    }
+
+
+//Block hit logic
+    public void onHitBlock(RayTraceResult rayTraceResult, Block blockHit)
+    {
+//Can set whether projectile stops at blocks
+        if(!world.isRemote && !this.noClip)
+        {
+            this.motionX = this.motionY = this.motionZ = 0.0D;
+            this.onTrueSetDead();
+            this.setDead();
+            return;
+        }
     }
 
 
 
 
-    @Nullable
-    public EntityLivingBase getProjectileOwnerTarget() 
+//Set projectile rotation
+    public void setProjectileRotation()
     {
-        if (owner instanceof EntityLiving) 
+//Get horizontal speed
+        float horizontalSpeed = MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
+
+//Set horizontal rotation
+        this.rotationYaw = (float) (MathHelper.atan2(this.motionX, this.motionZ) * 360D / (2 * Math.PI));
+//Set vertical rotation
+        this.rotationPitch = (float) (MathHelper.atan2(this.motionY, (double) horizontalSpeed) * 360D / (2 * Math.PI));
+
+//Rotation smoothing
+        this.rotationPitch = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * 0.2F;
+        this.rotationYaw = this.prevRotationYaw + (this.rotationYaw - this.prevRotationYaw) * 0.2F;
+    }
+
+
+//Clamp projectile rotation
+    public void clampProjectileRotation()
+    {
+//If previous vertical rotation above positive bound
+        while (this.rotationPitch - this.prevRotationPitch < -180.0F)
         {
-            return ((EntityLiving) owner).getAttackTarget();
+//Adjust it negatively
+            this.prevRotationPitch -= 360.0F;
         }
 
-        return null;
+//If previous vertical rotation below negative bound
+        while (this.rotationPitch - this.prevRotationPitch >= 180.0F)
+        {
+//Adjust it positively
+            this.prevRotationPitch += 360.0F;
+        }
+
+//If previous horizontal rotation above positive bound
+        while (this.rotationYaw - this.prevRotationYaw < -180.0F)
+        {
+//Adjust it negatively
+            this.prevRotationYaw -= 360.0F;
+        }
+
+//If previous horizontal rotation below negative bound
+        while (this.rotationYaw - this.prevRotationYaw >= 180.0F)
+        {
+//Adjust it positively
+            this.prevRotationYaw += 360.0F;
+        }
+    }
+
+
+    @Override
+    public void performBasicMovement()
+    {
+        double movedX = this.motionX * this.accelerationTracker, movedY = this.motionY * (this.acceleratesVertically ? this.accelerationTracker : 1.0D), movedZ = this.motionZ * this.accelerationTracker;
+
+//Have to apply motion myself yes
+        this.posX += movedX;
+        this.posY += movedY;
+        this.posZ += movedZ;
+//Update anchor and position
+        if(this.anchorUse) { anchor = anchor.add(movedX, movedY, movedZ); }
+        this.setPosition(this.posX, this.posY, this.posZ);
+
+//Apply acceleration and gravity
+        this.accelerationApply();
+
+        if (!this.hasNoGravity())
+        {
+            this.motionY -= this.gravitySpeed;
+        }
     }
 
 
 
 
-    @Override
-    protected void writeEntityToNBT(NBTTagCompound compound)
+//This is apparently universal
+//to every vanilla entity, initial rotation
+    @SideOnly(Side.CLIENT)
+    public void setVelocity(double x, double y, double z)
     {
-        super.writeEntityToNBT(compound);
+        this.motionX = x;
+        this.motionY = y;
+        this.motionZ = z;
 
-
-        compound.setBoolean("FirstBeenShot", this.firstBeenShot);
-
-        compound.setDouble("SpeedX", this.speedX);
-        compound.setDouble("SpeedY", this.speedY);
-        compound.setDouble("SpeedZ", this.speedZ);
-        compound.setDouble("AccelerationRate", this.accelerationRate);
-        compound.setDouble("AccelerationCurrent", this.accelerationCurrent);
-        compound.setDouble("GravitySpeed", this.gravitySpeed);
-
-        compound.setDouble("HitCheckSize", this.hitCheckSize);
-        compound.setBoolean("ProjectileStopsAtEntity", this.projectileStopsAtEntity);
-        compound.setBoolean("ProjectileStopsAtBlock", this.projectileStopsAtBlock);
-        compound.setFloat("ProjectileHitDamage", this.projectileHitDamage);
-
-        compound.setInteger("ParticleLifetime", this.particleLifetime);
-        compound.setInteger("ParticleDensity", this.particleDensity);
-        compound.setDouble("ParticleVelocity", this.particleVelocity);
-
-
-//Niche
-        compound.setBoolean("ProjectileTransitionShould", this.projectileTransitionShould);
-        compound.setInteger("ProjectileTransitionTimer", this.projectileTransitionTimer);
-        compound.setInteger("ProjectileTransitionLength", this.projectileTransitionLength);
-        compound.setBoolean("ProjectileTransitioned", this.projectileTransitioned);
-
-        compound.setInteger("SplitProjectileCount", this.splitProjectileCount);
-        compound.setDouble("SplitConeRadians", this.splitConeRadians);
-        compound.setInteger("SplitAimMode", this.splitAimMode);
-        compound.setInteger("SplitLifetime", this.splitLifetime);
-        compound.setFloat("SplitDamage", this.splitDamage);
-        compound.setDouble("SplitSpeed", this.splitSpeed);
-        compound.setDouble("SplitAcceleration", this.splitAcceleration);
-    }
-
-
-    @Override
-    protected void readEntityFromNBT(NBTTagCompound compound)
-    {
-        super.readEntityFromNBT(compound);
-
-
-        if (compound.hasKey("FirstBeenShot")) { this.firstBeenShot = compound.getBoolean("FirstBeenShot"); }
-
-        if (compound.hasKey("SpeedX")) { this.speedX = compound.getDouble("SpeedX"); }
-        if (compound.hasKey("SpeedY")) { this.speedY = compound.getDouble("SpeedY"); }
-        if (compound.hasKey("SpeedZ")) { this.speedZ = compound.getDouble("SpeedZ"); }
-        if (compound.hasKey("AccelerationRate")) { this.accelerationRate = compound.getDouble("AccelerationRate"); }
-        if (compound.hasKey("AccelerationCurrent")) { this.accelerationCurrent = compound.getDouble("AccelerationCurrent"); }
-        if (compound.hasKey("GravitySpeed")) { this.gravitySpeed = compound.getDouble("GravitySpeed"); }
-
-        if (compound.hasKey("HitCheckSize")) { this.hitCheckSize = compound.getDouble("HitCheckSize"); }
-        if (compound.hasKey("ProjectileStopsAtEntity")) { this.projectileStopsAtEntity = compound.getBoolean("ProjectileStopsAtEntity"); }
-        if (compound.hasKey("ProjectileStopsAtBlock")) { this.projectileStopsAtBlock = compound.getBoolean("ProjectileStopsAtBlock"); }
-        if (compound.hasKey("ProjectileHitDamage")) { this.projectileHitDamage = compound.getFloat("ProjectileHitDamage"); }
-
-        if (compound.hasKey("ParticleLifetime")) { this.particleLifetime = compound.getInteger("ParticleLifetime"); }
-        if (compound.hasKey("ParticleDensity")) { this.particleDensity = compound.getInteger("ParticleDensity"); }
-        if (compound.hasKey("ParticleVelocity")) { this.particleVelocity = compound.getDouble("ParticleVelocity"); }
-
-
-//Niche
-        if (compound.hasKey("ProjectileTransitionShould")) { this.projectileTransitionShould = compound.getBoolean("ProjectileTransitionShould"); }
-        if (compound.hasKey("ProjectileTransitionTimer")) { this.projectileTransitionTimer = compound.getInteger("ProjectileTransitionTimer"); }
-        if (compound.hasKey("ProjectileTransitionLength")) { this.projectileTransitionLength = compound.getInteger("ProjectileTransitionLength"); }
-        if (compound.hasKey("ProjectileTransitioned")) { this.projectileTransitioned = compound.getBoolean("ProjectileTransitioned"); }
-
-        if (compound.hasKey("SplitProjectileCount")) { this.splitProjectileCount = compound.getInteger("SplitProjectileCount"); }
-        if (compound.hasKey("SplitConeRadians")) { this.splitConeRadians = compound.getDouble("SplitConeRadians"); } 
-        if (compound.hasKey("SplitAimMode")) { this.splitAimMode = compound.getInteger("SplitAimMode"); }
-        if (compound.hasKey("SplitLifetime")) { this.splitLifetime = compound.getInteger("SplitLifetime"); }
-        if (compound.hasKey("SplitDamage")) { this.splitDamage = compound.getFloat("SplitDamage"); }
-        if (compound.hasKey("SplitSpeed")) { this.splitSpeed = compound.getDouble("SplitSpeed"); } 
-        if (compound.hasKey("SplitAcceleration")) { this.splitAcceleration = compound.getDouble("SplitAcceleration"); } 
+        if (this.prevRotationPitch == 0.0F && this.prevRotationYaw == 0.0F)
+        {
+            float f = MathHelper.sqrt(x * x + z * z);
+            this.rotationPitch = (float)(MathHelper.atan2(y, f) * (180D / Math.PI));
+            this.rotationYaw = (float)(MathHelper.atan2(x, z) * (180D / Math.PI));
+            this.prevRotationPitch = this.rotationPitch;
+            this.prevRotationYaw = this.rotationYaw;
+            this.setLocationAndAngles(this.posX, this.posY, this.posZ, this.rotationYaw, this.rotationPitch);
+        }
     }
 
 }
-

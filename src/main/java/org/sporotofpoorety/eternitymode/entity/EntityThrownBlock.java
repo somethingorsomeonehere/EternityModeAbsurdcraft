@@ -59,7 +59,6 @@ public class EntityThrownBlock extends EntityWithOwner
 
 
     public boolean dealsDamage;
-    public float thrownBlockDamage;
 
 
     public boolean hasManualOrigin;
@@ -80,7 +79,7 @@ public class EntityThrownBlock extends EntityWithOwner
 
     public EntityThrownBlock(World worldIn, double x, double y, double z, 
     EntityLivingBase owner, IBlockState fallingBlockState, 
-    boolean dontPlaceBlock, boolean shouldDropItem, boolean dealsDamage, float thrownBlockDamage)
+    boolean dontPlaceBlock, boolean shouldDropItem, boolean dealsDamage, float damageVal)
     {
         super(worldIn, x, y, z, owner);
         this.preventEntitySpawning = true;
@@ -100,7 +99,7 @@ public class EntityThrownBlock extends EntityWithOwner
         this.shouldDropItem = shouldDropItem; 
 
         this.dealsDamage = dealsDamage; 
-        this.thrownBlockDamage = thrownBlockDamage; 
+        this.damageVal = damageVal; 
     }
 
 
@@ -151,14 +150,10 @@ public class EntityThrownBlock extends EntityWithOwner
 //Save tile entity data
         if (this.tileEntityData != null) { compound.setTag("TileEntityData", this.tileEntityData); }
 
-
         compound.setBoolean("DontPlaceBlock", this.dontPlaceBlock);
         compound.setBoolean("DropItem", this.shouldDropItem);
 
-
         compound.setBoolean("DealsDamage", this.dealsDamage);
-        compound.setFloat("ThrownBlockDamage", this.thrownBlockDamage);
-
 
         compound.setBoolean("HasManualOrigin", this.hasManualOrigin);
         compound.setBoolean("DontBreakInitialPos", this.dontBreakInitialPos);
@@ -194,14 +189,10 @@ public class EntityThrownBlock extends EntityWithOwner
 //Get tile entity data
         if (compound.hasKey("TileEntityData")) { this.tileEntityData = compound.getCompoundTag("TileEntityData"); }
 
-
         if (compound.hasKey("DontPlaceBlock")) { this.dontPlaceBlock = compound.getBoolean("DontPlaceBlock"); }
         if (compound.hasKey("DropItem")) { this.shouldDropItem = compound.getBoolean("DropItem"); }
 
-
         if (compound.hasKey("DealsDamage")) { this.dealsDamage = compound.getBoolean("DealsDamage"); }
-        if (compound.hasKey("ThrownBlockDamage")) { this.thrownBlockDamage = compound.getFloat("ThrownBlockDamage"); }
-
 
         if (compound.hasKey("HasManualOrigin")) { this.hasManualOrigin = compound.getBoolean("HasManualOrigin"); }
         if (compound.hasKey("DontBreakInitialPos")) { this.dontBreakInitialPos = compound.getBoolean("DontBreakInitialPos"); }
@@ -257,7 +248,7 @@ public class EntityThrownBlock extends EntityWithOwner
             {
 //Break that blockpos
 //              this.world.setBlockToAir(blockPosAt);
-                BlockUtil.destroyBlockPos(blockPosAt, this.world, 999999999.9F, false, false, 69420); 
+                BlockUtil.destroyBlockPos(blockPosAt, this.world, 69420.0F, false, false, 69420); 
             }
         }
 
@@ -272,10 +263,8 @@ public class EntityThrownBlock extends EntityWithOwner
             }
 
 //Basic movement
-            if(!this.dontMove) { this.performBasicMovement(); }
+            this.performBasicMovement();
         }
-
-
 
 
 //Despawn/place logic
@@ -336,11 +325,11 @@ public class EntityThrownBlock extends EntityWithOwner
             {
             	if(this.owner == null)
             	{
-            		entity.attackEntityFrom(DamageSource.causeThrownDamage(this, this), this.thrownBlockDamage);
+            		entity.attackEntityFrom(DamageSource.causeThrownDamage(this, this), this.damageVal);
             	}
             	else
             	{
-            		entity.attackEntityFrom(DamageSource.causeThrownDamage(this, this.owner), this.thrownBlockDamage);
+            		entity.attackEntityFrom(DamageSource.causeThrownDamage(this, this.owner), this.damageVal);
             	}
             }
         }

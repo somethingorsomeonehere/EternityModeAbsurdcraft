@@ -18,6 +18,7 @@ import net.minecraft.world.World;
 
 import org.sporotofpoorety.eternitymode.entity.EntityWithOwner;
 import org.sporotofpoorety.eternitymode.interfacemixins.IMixinEntityMob;
+import org.sporotofpoorety.eternitymode.util.DamageUtil;
 import org.sporotofpoorety.eternitymode.util.ExplosionUtil;
 
 
@@ -53,8 +54,9 @@ public class EntityDemonScythe extends EntityWithOwner
     protected void entityInit() {}
 
 
-//Particles on expire
-    public void onLifetimeExpire()
+//Particles on true set dead
+    @Override
+    public void onTrueSetDead()
     {
         for (int particleAt = 0; particleAt < 2000; ++particleAt)
         {
@@ -66,37 +68,25 @@ public class EntityDemonScythe extends EntityWithOwner
             -this.rand.nextDouble(), 
             (this.rand.nextDouble() - 0.5D) * 2.0D);
         }   
-
-        this.setDead();
     }
 
 
     @Override
     public void onUpdate() 
     {
+        super.onUpdate();
+
+
 //Die and particles on collide
-        if(!this.world.isRemote && this.world.collidesWithAnyBlock(this.getEntityBoundingBox())) 
+        if(this.world.collidesWithAnyBlock(this.getEntityBoundingBox())) 
         {
-            for (int particleAt = 0; particleAt < 2000; ++particleAt)
-            {
-                this.world.spawnParticle(EnumParticleTypes.PORTAL, 
-                this.posX + (this.rand.nextDouble() - 0.5D) * 6.0D, 
-                this.posY + (this.rand.nextDouble() - 0.5D) * 6.0D, 
-                this.posZ + (this.rand.nextDouble() - 0.5D) * 6.0D, 
-                (this.rand.nextDouble() - 0.5D) * 2.0D, 
-                -this.rand.nextDouble(), 
-                (this.rand.nextDouble() - 0.5D) * 2.0D);
-            }   
-         
+            this.onTrueSetDead();
             this.setDead(); 
             return; 
         }
 
 
-        super.onUpdate();
-
-
-        if(!this.world.isRemote)
+        if(this.world.isRemote)
         {
             for (int particleAt = 0; particleAt < 40; ++particleAt)
             {
@@ -111,6 +101,7 @@ public class EntityDemonScythe extends EntityWithOwner
         }
 
 
+/*
         if(this.owner != null)
         {
             List<Entity> nearEntities = this.world.getEntitiesWithinAABBExcludingEntity(this.owner, this.getEntityBoundingBox().grow(0.75D, 2.25D, 0.75D));
@@ -135,6 +126,31 @@ public class EntityDemonScythe extends EntityWithOwner
                 }
             }
         }
+*/
+
+        List<EntityLivingBase> targets = DamageUtil.nearTargets(this.world, this.owner, this.getEntityBoundingBox().grow(0.75D, 2.25D, 0.75D));
+
+
+        for(Entity nearEntity : targets)
+        {
+            if(this.owner instanceof EntityPlayer)
+            {
+	            nearEntity.attackEntityFrom(DamageSource.causePlayerDamage((EntityPlayer) this.owner), this.damageVal);
+            }
+            else
+            {
+                nearEntity.attackEntityFrom(DamageSource.causeIndirectDamage(this, this.owner).setProjectile(), this.damageVal);
+            }
+
+//Fling away
+            double entityDist = Math.sqrt
+            (Math.pow(nearEntity.posX - this.posX, 2) + Math.pow(nearEntity.posY - this.posY, 2) + Math.pow(nearEntity.posZ - this.posZ, 2));
+
+            nearEntity.motionX += (nearEntity.posX - this.posX) / entityDist;
+            nearEntity.motionY += (nearEntity.posY - this.posY) / entityDist;
+            nearEntity.motionZ += (nearEntity.posZ - this.posZ) / entityDist;
+        }
+
 
         this.performBasicMovement();
     }

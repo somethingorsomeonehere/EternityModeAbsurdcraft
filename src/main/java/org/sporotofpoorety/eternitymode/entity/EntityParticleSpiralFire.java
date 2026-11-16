@@ -35,7 +35,7 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
     double fireballHitCheckSize; 
     boolean fireballProjectileStopsAtEntity; 
     boolean fireballProjectileStopsAtBlock;
-    float fireballProjectileHitDamage;
+    float fireballDamageVal;
 
     int fireballFireDuration;
 
@@ -49,20 +49,20 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
 
     public EntityParticleSpiralFire(World world, double x, double y, double z,
     EntityLivingBase owner, 
-    int lifetimeMax, int timeToArm,
-    boolean doesDamage, int damageInterval, float damageAmount, double damageRadius, double damageHeight, 
+    int lifetimeMax, int transTimer,
+    boolean doesDamage, int damageInterval, float damageVal, double damageRadius, double damageHeight, 
     int particleLifetime, double visualRadius, double riseSpeed, int textureIndex,
     int setsFireLength, 
     boolean fireballEnabled, int fireballAmount,
     int fireballLifetimeMax, double fireballSpeedHorizontal, double fireballSpeedVertical,
     double fireballAccelerationRate, double fireballGravitySpeed,  
-    double fireballHitCheckSize, boolean fireballProjectileStopsAtEntity, boolean fireballProjectileStopsAtBlock, float fireballProjectileHitDamage,
+    double fireballHitCheckSize, boolean fireballProjectileStopsAtEntity, boolean fireballProjectileStopsAtBlock, float fireballDamageVal,
     int fireballFireDuration) 
     {
         super(world, x, y, z,
         owner, 
-        lifetimeMax, timeToArm, 
-        doesDamage, damageInterval, damageAmount, damageRadius, damageHeight,
+        lifetimeMax, transTimer, 
+        doesDamage, damageInterval, damageVal, damageRadius, damageHeight,
         particleLifetime, visualRadius, riseSpeed, textureIndex);
 
         this.setsFireLength = setsFireLength;
@@ -80,7 +80,7 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
         this.fireballHitCheckSize = fireballHitCheckSize; 
         this.fireballProjectileStopsAtEntity = fireballProjectileStopsAtEntity; 
         this.fireballProjectileStopsAtBlock = fireballProjectileStopsAtBlock;
-        this.fireballProjectileHitDamage = fireballProjectileHitDamage;
+        this.fireballDamageVal = fireballDamageVal;
 
         this.fireballFireDuration = fireballFireDuration;
     }
@@ -105,7 +105,7 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
         compound.setDouble("FireballHitCheckSize", this.fireballHitCheckSize);
         compound.setBoolean("FireballProjectileStopsAtEntity", this.fireballProjectileStopsAtEntity);
         compound.setBoolean("FireballProjectileStopsAtBlock", this.fireballProjectileStopsAtBlock);
-        compound.setFloat("FireballProjectileHitDamage", this.fireballProjectileHitDamage);
+        compound.setFloat("FireballDamageVal", this.fireballDamageVal);
 
         compound.setInteger("FireballFireDuration", this.fireballFireDuration);
     }
@@ -130,7 +130,7 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
         if (compound.hasKey("FireballHitCheckSize")) { this.fireballHitCheckSize = compound.getDouble("FireballHitCheckSize"); } 
         if (compound.hasKey("FireballProjectileStopsAtEntity")) { this.fireballProjectileStopsAtEntity = compound.getBoolean("FireballProjectileStopsAtEntity"); }
         if (compound.hasKey("FireballProjectileStopsAtBlock")) { this.fireballProjectileStopsAtBlock = compound.getBoolean("FireballProjectileStopsAtBlock"); }
-        if (compound.hasKey("FireballProjectileHitDamage")) { this.fireballProjectileHitDamage = compound.getFloat("FireballProjectileHitDamage"); }
+        if (compound.hasKey("FireballDamageVal")) { this.fireballDamageVal = compound.getFloat("FireballDamageVal"); }
 
         if (compound.hasKey("FireballFireDuration")) { this.fireballFireDuration = compound.getInteger("FireballFireDuration"); }
     }
@@ -155,7 +155,7 @@ public class EntityParticleSpiralFire extends EntityParticleSpiral
         
         for (EntityLivingBase mob : mobs) 
         {
-            attackEntityFrom(DamageSource.GENERIC, this.damageAmount);
+            attackEntityFrom(DamageSource.GENERIC, this.damageVal);
             mob.setFire(this.setsFireLength);
         }
     }

@@ -34,6 +34,7 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.Vec3d;
 
 
 import org.sporotofpoorety.eternitymode.client.particles.ParticleSpiral; 
@@ -64,6 +65,14 @@ public abstract class MixinEntityLiving implements IMixinEntityLiving
 //Common architecture for scheduled actions
     @Unique
     private final ConcurrentLinkedQueue<QueuedActionAtPos> queuedActionsAtPos = new ConcurrentLinkedQueue<>();
+
+//Target offset
+    @Unique
+    private static final DataParameter<Float> TARGET_X = EntityDataManager.createKey(EntityLiving.class, DataSerializers.FLOAT);
+    @Unique
+    private static final DataParameter<Float> TARGET_Y = EntityDataManager.createKey(EntityLiving.class, DataSerializers.FLOAT);
+    @Unique
+    private static final DataParameter<Float> TARGET_Z = EntityDataManager.createKey(EntityLiving.class, DataSerializers.FLOAT);
 
 
 
@@ -134,6 +143,37 @@ public abstract class MixinEntityLiving implements IMixinEntityLiving
         {
 //Empty queue logic
             this.queuedActionsEmptyLogic();
+        }
+    }
+
+
+    @Inject
+    (
+        method = "onUpdate",
+        at = @At("TAIL")
+    )
+//Remember last target offset
+    private void updateTargetOffset(CallbackInfo callInfo)
+    {
+        EntityLiving self = (EntityLiving) (Object) this;
+        Entity selfEntity = (Entity) (Object) this; 
+
+
+		if (!selfEntity.world.isRemote)
+        {
+            EntityLivingBase attackTarget = self.getAttackTarget();
+            if(attackTarget != null)
+            {
+//Set target pos
+                this.setTargetOffset
+                (attackTarget.posX - selfEntity.posX, 
+                attackTarget.posY + (attackTarget.height / 2.0D) - (selfEntity.posY + (selfEntity.height / 2.0D)), 
+                attackTarget.posZ - selfEntity.posZ);
+            }
+            else
+            {
+                this.setTargetOffset(69420.0D, 69420.0D, 69420.0D);
+            }
         }
     }
 
@@ -237,6 +277,9 @@ public abstract class MixinEntityLiving implements IMixinEntityLiving
 //Register the new data parameters
         selfEntity.getDataManager().register(REAL_TICKS_EXISTED, Integer.valueOf(0));
         selfEntity.getDataManager().register(IS_ABSURDCRAFT_STUNNED, Boolean.valueOf(false));         
+        selfEntity.getDataManager().register(TARGET_X, Float.valueOf(69420.0F));         
+        selfEntity.getDataManager().register(TARGET_Y, Float.valueOf(69420.0F));         
+        selfEntity.getDataManager().register(TARGET_Z, Float.valueOf(69420.0F));         
     }
 
 
@@ -398,6 +441,15 @@ public abstract class MixinEntityLiving implements IMixinEntityLiving
         return this.queuedActionsAtPos;
     }
 
+    public Vec3d getTargetOffset()
+    {
+        Entity selfEntity = (Entity) (Object) this;
+        return new Vec3d
+        ((double) ((Float)selfEntity.getDataManager().get(TARGET_X)).floatValue(),
+        (double) ((Float)selfEntity.getDataManager().get(TARGET_Y)).floatValue(),
+        (double) ((Float)selfEntity.getDataManager().get(TARGET_Z)).floatValue());
+    }
+
 
 //New setters
 
@@ -547,6 +599,14 @@ public abstract class MixinEntityLiving implements IMixinEntityLiving
     public void addQueuedAction(QueuedActionAtPos queuedAction)
     {
         this.queuedActionsAtPos.add(queuedAction);
+    }
+
+    public void setTargetOffset(double targetX, double targetY, double targetZ)
+    {
+        Entity selfEntity = (Entity) (Object) this;
+        selfEntity.getDataManager().set(TARGET_X, Float.valueOf((float) targetX));    
+        selfEntity.getDataManager().set(TARGET_Y, Float.valueOf((float) targetY));    
+        selfEntity.getDataManager().set(TARGET_Z, Float.valueOf((float) targetZ));    
     }
 
 }
