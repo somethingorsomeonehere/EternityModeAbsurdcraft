@@ -226,9 +226,8 @@ public class EntityMeteorBlock extends EntityThrownBlock
             EntityFlameShotLinear entitySplit = new EntityFlameShotLinear(this.world, this.prevPosX, this.prevPosY, this.prevPosZ,
                 this.owner,
                 this.splitLifetime, 
-                vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed,
-                this.splitAcceleration, 0.0D,
-                0.6D, true, true, this.splitDamage,
+                vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed, this.splitAcceleration,
+                true, true, this.splitDamage,
                 20, this.splitExplodes, this.splitExplosionPower, this.splitFire, this.splitDestruction);
 
             this.world.spawnEntity(entitySplit);

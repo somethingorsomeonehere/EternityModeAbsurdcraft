@@ -2,6 +2,7 @@ package org.sporotofpoorety.eternitymode.entity.projectile;
 
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.MoverType;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -24,16 +25,16 @@ public class EntityDarkShotWavy extends EntityDarkShotLinear
 
     public EntityDarkShotWavy(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
+    int lifetimeMax, 
+    double speedX, double speedY, double speedZ, double accelerationRate, 
+    boolean stopsAtEntity, boolean stopsAtBlock, float damageVal,
     RotateAt rotAt, SinWave sinWv)
     {
         super(worldIn, x, y, z,
         owner,
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
+        lifetimeMax, 
+        speedX, speedY, speedZ, accelerationRate, 
+        stopsAtEntity, stopsAtBlock, damageVal);
         this.rotMoves = true;
         this.sinMoves = true;
 
@@ -52,11 +53,11 @@ public class EntityDarkShotWavy extends EntityDarkShotLinear
 		if(!world.isRemote)
         {
 //Rotate and go in and out, like rotmg staff
-            if(rotMoves && sinMoves)
+            if(realTicksExisted > 20 && rotMoves && sinMoves)
             {
                 Vec3d combo = rotAt.getDirAt().scale(sinWv.valAt * sinWv.scale);
 
-                move(anchor.x + combo.x - this.posX, anchor.y + combo.y - this.posY, anchor.z + combo.z - this.posZ);
+                move(MoverType.SELF, anchor.x + combo.x - this.posX, anchor.y + combo.y - this.posY, anchor.z + combo.z - this.posZ);
             
                 rotAt.rotInc();
                 sinWv.sinInc();

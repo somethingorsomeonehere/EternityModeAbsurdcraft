@@ -30,16 +30,16 @@ public class EntityProjectileBouncing extends EntityProjectileLinear
 
     public EntityProjectileBouncing(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
+    int lifetimeMax, 
+    double speedX, double speedY, double speedZ, double accelerationRate, 
+    boolean stopsAtEntity, boolean stopsAtBlock, float damageVal,
     boolean acceleratesVertically, boolean bounceUpExtra, double bounceUpForce)
     {
         super(worldIn, x, y, z, 
         owner,
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, collidesEntities, collidesBlocks, damageVal);
+        lifetimeMax, 
+        speedX, speedY, speedZ, accelerationRate, 
+        stopsAtEntity, stopsAtBlock, damageVal);
 
         this.acceleratesVertically = acceleratesVertically;
         this.isBouncing = false;

@@ -19,6 +19,16 @@ import org.sporotofpoorety.eternitymode.interfacemixins.IMixinEntityMob;
 public final class DamageUtil 
 {
 
+    public static boolean canTarget(Entity attacker, Entity target)
+    {
+        if(isHostile(attacker) != isHostile(target))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public static boolean isHostile(Entity entity)
     {
         if((entity instanceof EntityMob && !((IMixinEntityMob) entity).isTamed()) 

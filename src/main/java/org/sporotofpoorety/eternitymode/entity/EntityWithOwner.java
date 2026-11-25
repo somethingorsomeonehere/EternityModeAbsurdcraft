@@ -206,14 +206,9 @@ public abstract class EntityWithOwner extends Entity
         this.anchor = new Vec3d(this.posX, this.posY, this.posZ);
     }
 
-    public void move(double x, double y, double z)
-    {
-        this.move(MoverType.SELF, x, y, z);
-    }
-
     public void moveAdjust(double x, double y, double z)
     {
-        this.move(this.motionX, this.motionY, this.motionZ);
+        this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
         if(this.anchorUse) { anchor = anchor.add(x, y, z); }
     }
 
@@ -227,6 +222,11 @@ public abstract class EntityWithOwner extends Entity
         {
             this.motionY -= this.gravitySpeed;
         }
+    }
+
+    public void performOffsets()
+    {
+
     }
 
     public void accelerationApply()
@@ -265,6 +265,22 @@ public abstract class EntityWithOwner extends Entity
                 cachedTarget = EntitiesWithinChunks.getNearestHostile(this.world, this.posX, this.posZ, 4);
             } 
         }
+    }
+
+    public void onLifetimeExpire()
+    {
+        this.onTrueSetDead();
+        this.setDead();
+    }
+
+    public void onTrueSetDead()
+    {
+
+    }
+
+    public Vec3d getTickMv()
+    {
+        return new Vec3d(this.posX - this.lastTickPosX, this.posY - this.lastTickPosY, this.posZ - this.lastTickPosZ);
     }
 
 
@@ -327,18 +343,6 @@ public abstract class EntityWithOwner extends Entity
 
 //If no UUID, check failed
         return false;
-
-    }
-
-
-    public void onLifetimeExpire()
-    {
-        this.onTrueSetDead();
-        this.setDead();
-    }
-
-    public void onTrueSetDead()
-    {
 
     }
 

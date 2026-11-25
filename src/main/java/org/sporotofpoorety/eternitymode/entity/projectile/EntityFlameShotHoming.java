@@ -44,21 +44,21 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
 
     public EntityFlameShotHoming(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
+    int lifetimeMax, 
+    double speedX, double speedY, double speedZ, double accelerationRate, 
+    boolean stopsAtEntity, boolean stopsAtBlock, float damageVal,
     int splitProjectileCount, double splitConeRadians, int splitAimMode,
     int splitLifetime, float splitDamage, double splitSpeed, double splitAcceleration,
-    int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode, 
+    double homingSpeed, int homingMode, int timePreHomingMax, int homingTimeMax, 
     int fireDuration, boolean shouldExplode, float explosionPower, boolean explosionFire, boolean explosionDestruction,
     boolean shouldSplit, boolean splitExplodes, float splitExplosionPower, boolean splitFire, boolean splitDestruction)
     {
         super(worldIn, x, y, z,
         owner, 
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
-        timePreHomingMax, homingTimeHasMax, homingTimeMax, homingSpeed, homingMode);
+        lifetimeMax, 
+        speedX, speedY, speedZ, accelerationRate,
+        stopsAtEntity, stopsAtBlock, damageVal,
+        homingSpeed, homingMode, timePreHomingMax, homingTimeMax);
 
         this.setSize(2.0F, 2.0F);
 
@@ -157,9 +157,8 @@ public class EntityFlameShotHoming extends EntityProjectileHoming
             EntityFlameShotLinear entitySplit = new EntityFlameShotLinear(this.world, this.prevPosX, this.prevPosY, this.prevPosZ,
                 this.owner,
                 this.splitLifetime, 
-                vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed,
-                this.splitAcceleration, 0.0D,
-                0.6D, true, true, this.splitDamage,
+                vecAt.x * this.splitSpeed, vecAt.y * this.splitSpeed, vecAt.z * this.splitSpeed, this.splitAcceleration, 
+                true, true, this.splitDamage,
                 20, this.splitExplodes, this.splitExplosionPower, this.splitFire, this.splitDestruction);
 
             this.world.spawnEntity(entitySplit);

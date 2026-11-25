@@ -1,6 +1,7 @@
 package org.sporotofpoorety.eternitymode.util;
 
 
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -148,6 +149,45 @@ Rotates vector around axis
 
 //One last normalize just to be sure
         return finalInterpolatedDir.normalize();
+    }
+
+
+    public static void setEntityRotFromMotion(Entity entity)
+    {
+//Get horizontal speed
+        float horizontalSpeed = MathHelper.sqrt(entity.motionX * entity.motionX + entity.motionZ * entity.motionZ);
+
+//Set horz and vert rotation
+        entity.rotationYaw = (float) (MathHelper.atan2(entity.motionX, entity.motionZ) * 360D / (2 * Math.PI));
+        entity.rotationPitch = (float) (MathHelper.atan2(entity.motionY, (double) horizontalSpeed) * 360D / (2 * Math.PI));
+
+//Rotation smoothing
+        entity.rotationPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * 0.2F;
+        entity.rotationYaw = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * 0.2F;
+    }
+
+
+    public static void clampEntityPrevRot(Entity entity)
+    {
+        while (entity.rotationPitch - entity.prevRotationPitch < -180.0F)
+        {
+            entity.prevRotationPitch -= 360.0F;
+        }
+
+        while (entity.rotationPitch - entity.prevRotationPitch >= 180.0F)
+        {
+            entity.prevRotationPitch += 360.0F;
+        }
+
+        while (entity.rotationYaw - entity.prevRotationYaw < -180.0F)
+        {
+            entity.prevRotationYaw -= 360.0F;
+        }
+
+        while (entity.rotationYaw - entity.prevRotationYaw >= 180.0F)
+        {
+            entity.prevRotationYaw += 360.0F;
+        }
     }
 
 }

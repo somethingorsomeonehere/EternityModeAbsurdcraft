@@ -16,6 +16,15 @@ public class RotateAt
     public double angAt;
 
 
+    public RotateAt(Vec3d relX, Vec3d relY, double scale, int angSteps, double angAt) 
+    {
+        this.relX = relX;
+        this.relY = relY;
+        this.scale = scale;
+        this.angInc = 2.0D * Math.PI / ((double)angSteps);
+        this.angAt = angAt;
+    }
+
     public RotateAt(Vec3d relX, Vec3d relY, double scale, double angInc, double angAt) 
     {
         this.relX = relX;

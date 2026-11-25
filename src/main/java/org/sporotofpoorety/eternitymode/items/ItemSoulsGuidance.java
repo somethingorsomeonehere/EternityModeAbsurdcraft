@@ -102,13 +102,12 @@ public class ItemSoulsGuidance extends Item
             EntityGreenShotHoming greenShot = new EntityGreenShotHoming
             (
                 world,
-                playerEyesFullTick.x, playerEyesFullTick.y, playerEyesFullTick.z,
+                playerEyesFullTick.x + playerLookDir.x, playerEyesFullTick.y + playerLookDir.y, playerEyesFullTick.z + playerLookDir.z,
                 player,
                 200,
-                playerLookDir.x * 0.25D, playerLookDir.y * 0.25D, playerLookDir.z * 0.25D, 
-                1.0D, 0.0D, 
-                0.6D, true, true, -5.0F,
-                0, false, 69420, 0.6D, 0
+                playerLookDir.x * 0.25D, playerLookDir.y * 0.25D, playerLookDir.z * 0.25D, 1.0D,
+                true, true, -5.0F,
+                0.6D, 0, 0, 69420 
             );
 
         player.world.spawnEntity(greenShot);

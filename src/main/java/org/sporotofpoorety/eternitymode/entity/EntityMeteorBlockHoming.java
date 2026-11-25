@@ -237,9 +237,9 @@ public class EntityMeteorBlockHoming extends EntityMeteorBlock
                 );
 
 //Simple homing
-                this.motionX = targetDistNormalized.x * this.homingSpeed * this.accelerationTracker;;
-                this.motionY = targetDistNormalized.y * this.homingSpeed * this.accelerationTracker;;
-                this.motionZ = targetDistNormalized.z * this.homingSpeed * this.accelerationTracker;;
+                this.motionX = targetDistNormalized.x * this.homingSpeed * this.accelerationTracker;
+                this.motionY = targetDistNormalized.y * this.homingSpeed * this.accelerationTracker;
+                this.motionZ = targetDistNormalized.z * this.homingSpeed * this.accelerationTracker;
             }
         }
 

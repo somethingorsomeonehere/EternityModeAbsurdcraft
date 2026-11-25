@@ -16,10 +16,26 @@ public class SinWave
     public double valAt;
 
 
+    public SinWave(double scale, int angSteps, double angAt, double valAt) 
+    {
+        this.scale = scale;
+        this.angInc = (2.0D * Math.PI) / angSteps;
+        this.angAt = angAt;
+        this.valAt = valAt;
+    }
     public SinWave(double scale, double angInc, double angAt, double valAt) 
     {
         this.scale = scale;
         this.angInc = angInc;
+        this.angAt = angAt;
+        this.valAt = valAt;
+    }
+
+    public SinWave(Vec3d sinWvAxis, double scale, int angSteps, double angAt, double valAt) 
+    {
+        this.sinWvAxis = sinWvAxis;
+        this.scale = scale;
+        this.angInc = (2.0D * Math.PI) / angSteps;
         this.angAt = angAt;
         this.valAt = valAt;
     }

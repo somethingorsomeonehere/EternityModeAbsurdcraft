@@ -20,17 +20,17 @@ public class EntityDarkShotHoming extends EntityProjectileHoming
 
     public EntityDarkShotHoming(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ, 
-    double accelerationRate, double gravitySpeed, 
-    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal,
+    int lifetimeMax, 
+    double speedX, double speedY, double speedZ, double accelerationRate, 
+    boolean stopsAtEntity, boolean stopsAtBlock, float damageVal,
     int timePreHomingMax, boolean homingTimeHasMax, int homingTimeMax, double homingSpeed, int homingMode)
     {
         super(worldIn, x, y, z,
         owner, 
-        lifetimeMax, speedX, speedY, speedZ,
-        accelerationRate, gravitySpeed, 
-        hitCheckSize, collidesEntities, collidesBlocks, damageVal,
-        timePreHomingMax, homingTimeHasMax, homingTimeMax, homingSpeed, homingMode);
+        lifetimeMax, 
+        speedX, speedY, speedZ, accelerationRate, 
+        stopsAtEntity, stopsAtBlock, damageVal,
+        homingSpeed, homingMode, timePreHomingMax, homingTimeMax);
 
         this.setSize(2.0F, 2.0F);
     }

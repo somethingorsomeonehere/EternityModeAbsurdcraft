@@ -19,6 +19,7 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.sporotofpoorety.eternitymode.entity.EntityWithOwner;
 import org.sporotofpoorety.eternitymode.util.DamageUtil;
+import org.sporotofpoorety.eternitymode.util.RotationUtil;
 
 
 
@@ -32,9 +33,8 @@ public class EntityProjectileRaytrace extends EntityWithOwner
     public double speedY;
     public double speedZ;
 
-    public double hitCheckSize;
-    public boolean collidesEntities;
-    public boolean collidesBlocks;
+    public boolean stopsAtEntity = true;
+    public boolean stopsAtBlock = true;
 
 //Niche
     public int splitProjectileCount = 50; 
@@ -55,9 +55,9 @@ public class EntityProjectileRaytrace extends EntityWithOwner
 
     public EntityProjectileRaytrace(World worldIn, double x, double y, double z, 
     EntityLivingBase owner,
-    int lifetimeMax, double speedX, double speedY, double speedZ,
-    double accelerationRate, double gravitySpeed,
-    double hitCheckSize, boolean collidesEntities, boolean collidesBlocks, float damageVal)
+    int lifetimeMax, 
+    double speedX, double speedY, double speedZ, double accelerationRate,
+    boolean stopsAtEntity, boolean stopsAtBlock, float damageVal)
     {
         super(worldIn, x, y, z, owner);
 
@@ -73,9 +73,8 @@ public class EntityProjectileRaytrace extends EntityWithOwner
         this.accelerationTracker = accelerationRate;
         this.gravitySpeed = gravitySpeed;
 
-        this.hitCheckSize = hitCheckSize;
-        this.collidesEntities = collidesEntities;
-        this.collidesBlocks = collidesBlocks;
+        this.stopsAtEntity = stopsAtEntity;
+        this.stopsAtBlock = stopsAtBlock;
         this.damageVal = damageVal;
     }
 
@@ -98,9 +97,8 @@ public class EntityProjectileRaytrace extends EntityWithOwner
         compound.setDouble("SpeedY", this.speedY);
         compound.setDouble("SpeedZ", this.speedZ);
 
-        compound.setDouble("HitCheckSize", this.hitCheckSize);
-        compound.setBoolean("CollidesEntities", this.collidesEntities);
-        compound.setBoolean("CollidesBlocks", this.collidesBlocks);
+        compound.setBoolean("StopsAtEntity", this.stopsAtEntity);
+        compound.setBoolean("StopsAtBlock", this.stopsAtBlock);
 
 //Niche
         compound.setInteger("SplitProjectileCount", this.splitProjectileCount);
@@ -125,9 +123,8 @@ public class EntityProjectileRaytrace extends EntityWithOwner
         if (compound.hasKey("SpeedY")) { this.speedY = compound.getDouble("SpeedY"); }
         if (compound.hasKey("SpeedZ")) { this.speedZ = compound.getDouble("SpeedZ"); }
 
-        if (compound.hasKey("HitCheckSize")) { this.hitCheckSize = compound.getDouble("HitCheckSize"); }
-        if (compound.hasKey("CollidesEntities")) { this.collidesEntities = compound.getBoolean("CollidesEntities"); }
-        if (compound.hasKey("CollidesBlocks")) { this.collidesBlocks = compound.getBoolean("CollidesBlocks"); }
+        if (compound.hasKey("StopsAtEntity")) { this.stopsAtEntity = compound.getBoolean("StopsAtEntity"); }
+        if (compound.hasKey("StopsAtBlock")) { this.stopsAtBlock = compound.getBoolean("StopsAtBlock"); }
 
 //Niche
         if (compound.hasKey("SplitProjectileCount")) { this.splitProjectileCount = compound.getInteger("SplitProjectileCount"); }
@@ -144,58 +141,45 @@ public class EntityProjectileRaytrace extends EntityWithOwner
 
     public void onUpdate()
     {
-//EntityWithOwner update
         super.onUpdate();
 
-
-//Apply initial speed
-        this.initialSpeedCheck();
-
-//Check for collision
-        RayTraceResult collisionResult = this.collideTotal();
-
-//Make collision decision
-        this.decideCollision(collisionResult);
-
-//Set and clamp rotation
-        this.setProjectileRotation();
-        this.clampProjectileRotation();
-
-//Projectile movement logic
-        this.performBasicMovement();
-    }
-
-
-//Check for initial speed apply
-    public void initialSpeedCheck()
-    {
-        if(!this.firstBeenShot)
+        
+        if(!this.world.isRemote)
         {
-            this.motionX = this.speedX;
-            this.motionY = this.speedY;
-            this.motionZ = this.speedZ;
-
-            this.firstBeenShot = true;
+//Check for initial speed
+            this.initialSpeedCheck();
+//Movement logic
+            this.performBasicMovement();
+            this.performOffsets();
         }
+//Set and clamp rotation
+        RotationUtil.setEntityRotFromMotion(this);
+        RotationUtil.clampEntityPrevRot(this);
+
+//Run collision
+        if(!this.world.isRemote) { this.collisionLogic(); }
     }
 
 
-//Check and return collision   
-    protected RayTraceResult collideTotal()
+    protected void collisionLogic()
     {
-        Vec3d vecStart = new Vec3d(this.posX, this.posY, this.posZ);
-        Vec3d vecEnd = new Vec3d(this.posX + this.motionX, this.posY + this.motionY, this.posZ + this.motionZ);
+//Check start and end movement
+        Vec3d vecStart = new Vec3d(this.lastTickPosX, this.lastTickPosY, this.lastTickPosZ);
+        Vec3d vecEnd = new Vec3d(this.posX, this.posY, this.posZ);
+        Vec3d tickMv = this.getTickMv();
 
-//Check blocks and entities
-        RayTraceResult collisionResult = this.collideBlocks(vecStart, vecEnd);
-        collisionResult = this.collideEntities(collisionResult, vecStart, vecEnd);
+//Sweep for entities roughly in trajectory
+        List<Entity> entitySweep = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox().expand(tickMv.x, tickMv.y, tickMv.z).grow(0.5D));
 
-        return collisionResult;
+//Check for then perform any collision
+        RayTraceResult collisionResult = this.detectBlockCollision(vecStart, vecEnd);
+        collisionResult = this.detectEntityCollision(collisionResult, vecStart, vecEnd);
+//Last tests if should collide
+        this.collideIfShould(collisionResult);
     }
 
-
-//Check collision (blocks)
-    public RayTraceResult collideBlocks(Vec3d vecStart, Vec3d vecEnd)
+    
+    public RayTraceResult detectBlockCollision(Vec3d vecStart, Vec3d vecEnd)
     {
         if(!this.noClip)
         {
@@ -203,7 +187,7 @@ public class EntityProjectileRaytrace extends EntityWithOwner
 //stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock
             false, true, false);
 
-//If this collided, truncate vecEnd
+//If a block is in the way, truncate vecEnd
             if (blockCollision != null)
             {
                 vecEnd = new Vec3d(blockCollision.hitVec.x, blockCollision.hitVec.y, blockCollision.hitVec.z);
@@ -217,156 +201,124 @@ public class EntityProjectileRaytrace extends EntityWithOwner
         }
     }
 
-//Check collision (entities)
-    public RayTraceResult collideEntities(RayTraceResult collisionResult, Vec3d vecStart, Vec3d vecEnd)
+    public RayTraceResult detectEntityCollision(RayTraceResult collisionResult, Vec3d vecStart, Vec3d vecEnd)
     {
-//Closest hit entity null by default
+        Vec3d mvVec = vecEnd.subtract(vecStart);
+        return detectEntityCollision(collisionResult, vecStart, vecEnd, mvVec);
+    }
+    public RayTraceResult detectEntityCollision(RayTraceResult collisionResult, Vec3d vecStart, Vec3d vecEnd, Vec3d mvVec)
+    {
+//Tick's movement and sweep
+        List<Entity> entitySweep = this.world.getEntitiesWithinAABBExcludingEntity(this, 
+            this.getEntityBoundingBox().expand(mvVec.x, mvVec.y, mvVec.z).grow(0.5d * this.width + 0.5d, 0.5d * this.height + 0.5d, 0.5d * this.width + 0.5d));
+//Closest entity and its distance
         Entity closestHitEntity = null;
-
-//Entities within BB + motion + 1 block of lenience
-        List<Entity> entitiesNearby = this.world.getEntitiesWithinAABBExcludingEntity(this, this.getEntityBoundingBox().expand(this.motionX, this.motionY, this.motionZ).grow(this.hitCheckSize + 0.5D));
-
-//Closest hit entity distance squared
-        double closestHitDistanceSq = 0.0D;
+        double closestHitDistSq = 0.0D;
 
 
-//For each nearby entity
-        for (Entity candidateEntity : entitiesNearby)
+//For each near entity
+        for (Entity candidateEntity : entitySweep)
         {
-//Check this projectile's hit entity conditions
-            if(!this.projectileHitEntityConditions(candidateEntity))
+//Check hit conditions
+            if(!this.hitEntityConditions(candidateEntity))
             {
                 continue;    
             }
 
-//Get and grow entity bounding box (hitcheck)
-                AxisAlignedBB entityBB = candidateEntity.getEntityBoundingBox().grow(this.hitCheckSize);
-//Calc if entity BB is in projectile's current motion path
-                RayTraceResult entityHitResult = entityBB.calculateIntercept(vecStart, vecEnd);
+//Check if entity is in expected trajectory
+            AxisAlignedBB adjustedBB = candidateEntity.getEntityBoundingBox().grow(0.5d * this.width + 0.25d, 0.5d * this.height + 0.5d, 0.25d * this.width + 0.25d);
+            RayTraceResult entityHitResult = adjustedBB.calculateIntercept(vecStart, vecEnd);
 
-
-//If entity is in motion path
+//Check if it's closest entity
             if (entityHitResult != null)
             {
-//Get distance sq
-                double candidateHitDistanceSq = vecStart.squareDistanceTo(entityHitResult.hitVec);
+                double candidateHitDistSq = vecStart.squareDistanceTo(entityHitResult.hitVec);
 
-//If this is the first near enough candidate
-                if (closestHitDistanceSq == 0.0D 
-//Or candidate closer than current closest candidate
-                || candidateHitDistanceSq < closestHitDistanceSq)
+                if (closestHitDistSq == 0.0D 
+                || candidateHitDistSq < closestHitDistSq)
                 {
-//This is now the closest hit entity
                     closestHitEntity = candidateEntity;
-//And set closest candidate distance to this candidate's
-                    closestHitDistanceSq = candidateHitDistanceSq;
+                    closestHitDistSq = candidateHitDistSq;
                 }
             }                  
         }
 
-//If an entity got hit at all
+//And if any, make that the collision result
         if (closestHitEntity != null)
         {
-//Override block collision with entity collision
             collisionResult = new RayTraceResult(closestHitEntity);
         }
 
         return collisionResult;
     }
 
-
-    public boolean projectileHitEntityConditions(Entity entityToCheck)
+    public boolean hitEntityConditions(Entity entity)
     {
-//If entity can't be collided
-        if (!entityToCheck.canBeCollidedWith()
-//Or is not EntityLivingBase
-        || !(entityToCheck instanceof EntityLivingBase)
-//Or is owner of projectile
-        || entityToCheck == this.owner
-//Or is on projectile's team
-        || entityToCheck.isOnSameTeam(this)
-//Or is on (non-null) owner's team
-        || (this.owner != null && (entityToCheck.isOnSameTeam(this.owner))))
+        if(entity.canBeCollidedWith()
+        && DamageUtil.canTarget(this.owner, entity))
         {
-//Then it does not meet conditions
-            return false;
+            return true;
         }
 
-//Else it does
-        return true;
+        return false;
     }
 
 
-//Decide what collision to do
-    protected void decideCollision(RayTraceResult collisionResult)
+//Last tests if should collide
+    protected void collideIfShould(RayTraceResult collisionResult)
     {
-//If anything got hit at all
         if (collisionResult != null)
         {
-//Ignore portals
+//If not going into portal
             if (collisionResult.typeOfHit == RayTraceResult.Type.BLOCK && this.world.getBlockState(collisionResult.getBlockPos()).getBlock() == Blocks.PORTAL)
             {
-//              this.setPortal(collisionResult.getBlockPos());
+                this.setPortal(collisionResult.getBlockPos());
             }
-//Otherwise performs collision
+//Nor being externally handled
             else if (!net.minecraftforge.event.ForgeEventFactory.onProjectileImpact(this, collisionResult))
             {
+//Proceed collision
                 this.onHit(collisionResult);
             }
         }
     }
 
 
-//When projectile collides
+//Branch on entity or block collision
     public void onHit(RayTraceResult rayTraceResult)
     {
-//If raytrace hit an entity
         if (rayTraceResult.typeOfHit == RayTraceResult.Type.ENTITY) 
         {
-//Ensure an entity was actually hit
-            if(rayTraceResult.entityHit != null)
-            {
-//Perform on hitting entity logic
-                onHitEntity(rayTraceResult, rayTraceResult.entityHit);
-            }
+            onHitEntity(rayTraceResult, rayTraceResult.entityHit);
         } 
-//If raytrace hit a block
         else if (rayTraceResult.typeOfHit == RayTraceResult.Type.BLOCK) 
         {
-//Get block pos
             BlockPos posHit = rayTraceResult.getBlockPos();
-//Get block hit
             Block blockHit = this.world.getBlockState(posHit).getBlock();
 
-//Perform on hitting block logic
             onHitBlock(rayTraceResult, blockHit);        
         }
     }
 
 
-//Already preemptively null-checked to enable
-//projectile-specific logic to safely run before this setDead()
     public void onHitEntity(RayTraceResult rayTraceResult, Entity entityHit)
     {
-        if(!world.isRemote)
-        {
-            boolean ownerHostile = DamageUtil.isHostile(owner);
-            boolean targetHostile = DamageUtil.isHostile(entityHit);
+        boolean ownerHostile = DamageUtil.isHostile(owner);
+        boolean targetHostile = DamageUtil.isHostile(entityHit);
 
 //If owner is not null
-            if (this.owner != null && (ownerHostile != targetHostile) && this.damageVal > 0.1F)
-            {
+        if (this.owner != null && (ownerHostile != targetHostile) && this.damageVal > 0.1F)
+        {
 //Attack entity
-                entityHit.attackEntityFrom(DamageSource.causeIndirectDamage(this, this.owner).setProjectile(), this.damageVal);
-            }
+            entityHit.attackEntityFrom(DamageSource.causeIndirectDamage(this, this.owner).setProjectile(), this.damageVal);
+        }
 
 //Can set whether projectile stops at entities
-            if(this.collidesEntities)
-            {
-                this.onTrueSetDead();
-                this.setDead();
-                return;
-            }
+        if(this.stopsAtEntity)
+        {
+            this.onTrueSetDead();
+            this.setDead();
+            return;
         }
     }
 
@@ -374,8 +326,7 @@ public class EntityProjectileRaytrace extends EntityWithOwner
 //Block hit logic
     public void onHitBlock(RayTraceResult rayTraceResult, Block blockHit)
     {
-//Can set whether projectile stops at blocks
-        if(!world.isRemote && !this.noClip)
+        if(this.stopsAtBlock)
         {
             this.motionX = this.motionY = this.motionZ = 0.0D;
             this.onTrueSetDead();
@@ -387,52 +338,16 @@ public class EntityProjectileRaytrace extends EntityWithOwner
 
 
 
-//Set projectile rotation
-    public void setProjectileRotation()
+//Check for initial speed apply
+    public void initialSpeedCheck()
     {
-//Get horizontal speed
-        float horizontalSpeed = MathHelper.sqrt(this.motionX * this.motionX + this.motionZ * this.motionZ);
-
-//Set horizontal rotation
-        this.rotationYaw = (float) (MathHelper.atan2(this.motionX, this.motionZ) * 360D / (2 * Math.PI));
-//Set vertical rotation
-        this.rotationPitch = (float) (MathHelper.atan2(this.motionY, (double) horizontalSpeed) * 360D / (2 * Math.PI));
-
-//Rotation smoothing
-        this.rotationPitch = this.prevRotationPitch + (this.rotationPitch - this.prevRotationPitch) * 0.2F;
-        this.rotationYaw = this.prevRotationYaw + (this.rotationYaw - this.prevRotationYaw) * 0.2F;
-    }
-
-
-//Clamp projectile rotation
-    public void clampProjectileRotation()
-    {
-//If previous vertical rotation above positive bound
-        while (this.rotationPitch - this.prevRotationPitch < -180.0F)
+        if(!this.firstBeenShot)
         {
-//Adjust it negatively
-            this.prevRotationPitch -= 360.0F;
-        }
+            this.motionX = this.speedX;
+            this.motionY = this.speedY;
+            this.motionZ = this.speedZ;
 
-//If previous vertical rotation below negative bound
-        while (this.rotationPitch - this.prevRotationPitch >= 180.0F)
-        {
-//Adjust it positively
-            this.prevRotationPitch += 360.0F;
-        }
-
-//If previous horizontal rotation above positive bound
-        while (this.rotationYaw - this.prevRotationYaw < -180.0F)
-        {
-//Adjust it negatively
-            this.prevRotationYaw -= 360.0F;
-        }
-
-//If previous horizontal rotation below negative bound
-        while (this.rotationYaw - this.prevRotationYaw >= 180.0F)
-        {
-//Adjust it positively
-            this.prevRotationYaw += 360.0F;
+            this.firstBeenShot = true;
         }
     }
 
